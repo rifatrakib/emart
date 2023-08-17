@@ -7,6 +7,8 @@ authors = ["rifatrakib <Rakib.1508@outlook.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 fastapi = {extras = ["all"], version = "^0.101.1"}
+python-decouple = "^3.8"
+pydantic-settings = "^2.0.3"
 
 [tool.poetry.dev-dependencies]
 
