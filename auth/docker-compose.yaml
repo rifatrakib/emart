@@ -1,6 +1,17 @@
 version: "3.9"
 
 services:
+  auth_db:
+    container_name: auth_db
+    image: postgres:latest
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    restart: on-failure
+
   auth:
     container_name: emart-auth
     build: .
@@ -13,3 +24,8 @@ services:
     ports:
       - "8000:8000"
     restart: on-failure
+    depends_on:
+      - auth_db
+
+volumes:
+  pgdata:

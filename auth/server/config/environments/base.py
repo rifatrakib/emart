@@ -11,5 +11,12 @@ class RootConfig(BaseSettings):
 class BaseConfig(RootConfig):
     APP_NAME: str
 
+    # SQL Database Configurations
+    POSTGRES_HOST: str
+    POSTGRES_PORT: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+
     class Config:
         env_file = ".env"
