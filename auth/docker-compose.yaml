@@ -11,6 +11,8 @@ services:
     ports:
       - "5432:5432"
     restart: on-failure
+    networks:
+      - private_network
 
   auth:
     container_name: emart-auth
@@ -24,8 +26,14 @@ services:
     ports:
       - "8000:8000"
     restart: on-failure
+    networks:
+      - public_network
     depends_on:
       - auth_db
 
 volumes:
   pgdata:
+
+networks:
+  private_network:
+  public_network:
