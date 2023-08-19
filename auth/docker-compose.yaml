@@ -14,6 +14,18 @@ services:
     networks:
       - private_network
 
+  auth_cache:
+    container_name: auth_cache
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+      - redisconfig:/etc/redis
+    restart: on-failure
+    networks:
+      - private_network
+
   auth:
     container_name: emart-auth
     build: .
@@ -33,6 +45,8 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
+  redisconfig:
 
 networks:
   private_network:
