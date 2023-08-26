@@ -20,3 +20,12 @@ class BaseConfig(RootConfig):
 
     class Config:
         env_file = ".env"
+
+    @property
+    def RDS_URI(self) -> str:
+        username = self.POSTGRES_USER
+        password = self.POSTGRES_PASSWORD
+        host = self.POSTGRES_HOST
+        port = self.POSTGRES_PORT
+        db_name = self.POSTGRES_DB
+        return f"postgresql+asyncpg://{username}:{password}@{host}:{port}/{db_name}"
