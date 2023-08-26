@@ -10,6 +10,8 @@ fastapi = {extras = ["all"], version = "^0.101.1"}
 python-decouple = "^3.8"
 pydantic-settings = "^2.0.3"
 pydash = "^7.0.6"
+SQLAlchemy = {extras = ["asyncio"], version = "^2.0.20"}
+asyncpg = "^0.28.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
