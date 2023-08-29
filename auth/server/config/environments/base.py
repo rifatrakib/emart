@@ -18,6 +18,10 @@ class BaseConfig(RootConfig):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
 
+    # Cache Servers Configurations
+    REDIS_HOST: str
+    REDIS_PORT: int
+
     class Config:
         env_file = ".env"
 
@@ -29,3 +33,7 @@ class BaseConfig(RootConfig):
         port = self.POSTGRES_PORT
         db_name = self.POSTGRES_DB
         return f"postgresql+asyncpg://{username}:{password}@{host}:{port}/{db_name}"
+
+    @property
+    def REDIS_URI(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
