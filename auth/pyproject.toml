@@ -15,6 +15,8 @@ asyncpg = "^0.28.0"
 alembic = "^1.11.3"
 aioredis = "^2.0.1"
 fastapi-mail = "^1.4.1"
+passlib = {extras = ["bcrypt", "argon2"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
