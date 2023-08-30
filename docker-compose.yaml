@@ -28,8 +28,10 @@ services:
     restart: on-failure
     networks:
       - public_network
+      - private_network
 
 volumes:
+  pgdata:
   redisdata:
   redisconfig:
 
