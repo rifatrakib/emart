@@ -1,10 +1,14 @@
 from aioredis.client import Redis
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
-from server.database.account.crud import create_user_account
+from server.config.factory import settings
+from server.database.account.crud import authenticate_user, create_user_account
+from server.database.cache.manager import write_data_to_cache
 from server.models.schemas.base import MessageResponseSchema
-from server.models.schemas.inc.auth import SignupRequestSchema
+from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
+from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
+from server.security.authentication.jwt import create_jwt
 from server.security.dependencies.clients import get_database_session, get_redis_client
-from server.security.dependencies.request import signup_form
+from server.security.dependencies.request import login_form, signup_form
 from server.utils.enums import Tags, Versions
 from server.utils.helper import generate_temporary_url
 from server.utils.smtp import send_activation_mail
@@ -50,5 +54,36 @@ async def register(
         )
 
         return {"msg": "User account created. Check your email to activate your account."}
+    except HTTPException as e:
+        raise e
+
+
+@router.post(
+    "/login",
+    summary="Authenticate user",
+    description="Authenticate a user account.",
+    response_model=TokenResponseSchema,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def login(
+    redis: Redis = Depends(get_redis_client),
+    payload: LoginRequestSchema = Depends(login_form),
+    session: AsyncSession = Depends(get_database_session),
+) -> TokenResponseSchema:
+    try:
+        user = await authenticate_user(
+            session=session,
+            username=payload.username,
+            password=payload.password,
+        )
+
+        token = create_jwt(TokenUser(id=user.id, username=user.username, email=user.email, is_active=user.is_active))
+        write_data_to_cache(
+            redis,
+            token,
+            {"id": user.id, "username": user.username, "email": user.email, "is_active": user.is_active},
+            settings.JWT_MIN * 60,
+        )
+        return {"access_token": token, "token_type": "Bearer"}
     except HTTPException as e:
         raise e
