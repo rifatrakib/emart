@@ -9,7 +9,7 @@ class PasswordGenerator:
     def generate_hashed_password(self, hash_salt: str, new_password: str) -> str:
         return hash_generator.generate_password_hash(hash_salt=hash_salt, password=new_password)
 
-    def is_password_authenticated(self, hash_salt: str, password: str, hashed_password: str) -> bool:
+    def verify_password(self, hash_salt: str, password: str, hashed_password: str) -> bool:
         return hash_generator.is_password_verified(password=hash_salt + password, hashed_password=hashed_password)
 
 
