@@ -1,8 +1,8 @@
 from aioredis.client import Redis
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 from server.config.factory import settings
-from server.database.account.crud import authenticate_user, create_user_account
-from server.database.cache.manager import write_data_to_cache
+from server.database.account.crud import activate_user_account, authenticate_user, create_user_account
+from server.database.cache.manager import pop_from_cache, write_data_to_cache
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
@@ -41,7 +41,7 @@ async def register(
         url = await generate_temporary_url(
             redis,
             {"id": new_user.id, "username": new_user.username, "email": new_user.email},
-            f"{request.base_url}auth/activate",
+            f"{request.base_url}v1/auth/activate",
         )
 
         task_queue.add_task(
@@ -85,5 +85,29 @@ async def login(
             settings.JWT_MIN * 60,
         )
         return {"access_token": token, "token_type": "Bearer"}
+    except HTTPException as e:
+        raise e
+
+
+@router.get(
+    "/activate",
+    summary="Activate user account",
+    description="Activate a user account.",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def activate_account(
+    redis: Redis = Depends(get_redis_client),
+    session: AsyncSession = Depends(get_database_session),
+    validation_key: str = Query(
+        ...,
+        title="Validation key",
+        description="Validation key included as query parameter in the link sent to user email.",
+    ),
+) -> MessageResponseSchema:
+    try:
+        user = pop_from_cache(redis, validation_key)
+        updated_user = await activate_user_account(session=session, user_id=user["id"])
+        return {"msg": f"User account {updated_user.username} activated."}
     except HTTPException as e:
         raise e
