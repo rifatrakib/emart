@@ -42,3 +42,16 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
         raise_401_unauthorized(message="Incorrect password.")
 
     return user
+
+
+async def activate_user_account(session: AsyncSession, user_id: int) -> Account:
+    user = await session.get(Account, user_id)
+
+    if not user:
+        raise_404_not_found(message=f"The user with id {user_id} is not registered.")
+
+    user.is_active = True
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
