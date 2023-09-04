@@ -30,6 +30,13 @@ def raise_409_conflict(message: str = "Conflict") -> HTTPException:
     )
 
 
+def raise_410_gone(message: str = "Gone") -> HTTPException:
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail={"msg": message},
+    )
+
+
 def raise_422_unprocessable_entity(message: str = "Unprocessable entity") -> HTTPException:
     raise HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
