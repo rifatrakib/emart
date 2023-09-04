@@ -106,7 +106,7 @@ async def activate_account(
     ),
 ) -> MessageResponseSchema:
     try:
-        user = pop_from_cache(redis, validation_key)
+        user = await pop_from_cache(redis, validation_key)
         updated_user = await activate_user_account(session=session, user_id=user["id"])
         return {"msg": f"User account {updated_user.username} activated."}
     except HTTPException as e:
