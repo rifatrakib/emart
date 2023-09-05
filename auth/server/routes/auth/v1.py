@@ -1,14 +1,15 @@
 from aioredis.client import Redis
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
+from pydantic import EmailStr
 from server.config.factory import settings
-from server.database.account.crud import authenticate_user, create_user_account
-from server.database.cache.manager import write_data_to_cache
+from server.database.account.crud import activate_user_account, authenticate_user, create_user_account, read_user_by_email
+from server.database.cache.manager import pop_from_cache, write_data_to_cache
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
 from server.security.authentication.jwt import create_jwt
 from server.security.dependencies.clients import get_database_session, get_redis_client
-from server.security.dependencies.request import login_form, signup_form
+from server.security.dependencies.request import email_form_field, login_form, signup_form
 from server.utils.enums import Tags, Versions
 from server.utils.helper import generate_temporary_url
 from server.utils.smtp import send_activation_mail
@@ -41,7 +42,7 @@ async def register(
         url = await generate_temporary_url(
             redis,
             {"id": new_user.id, "username": new_user.username, "email": new_user.email},
-            f"{request.base_url}auth/activate",
+            f"{request.base_url}v1/auth/activate",
         )
 
         task_queue.add_task(
@@ -85,5 +86,64 @@ async def login(
             settings.JWT_MIN * 60,
         )
         return {"access_token": token, "token_type": "Bearer"}
+    except HTTPException as e:
+        raise e
+
+
+@router.get(
+    "/activate",
+    summary="Activate user account",
+    description="Activate a user account.",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def activate_account(
+    redis: Redis = Depends(get_redis_client),
+    session: AsyncSession = Depends(get_database_session),
+    validation_key: str = Query(
+        ...,
+        title="Validation key",
+        description="Validation key included as query parameter in the link sent to user email.",
+    ),
+) -> MessageResponseSchema:
+    try:
+        user = await pop_from_cache(redis, validation_key)
+        updated_user = await activate_user_account(session=session, user_id=user["id"])
+        return {"msg": f"User account {updated_user.username} activated."}
+    except HTTPException as e:
+        raise e
+
+
+@router.post(
+    "/activate/resend",
+    summary="Resend activation key",
+    description="Resend activation key to a user.",
+    response_model=MessageResponseSchema,
+)
+async def resend_activation_key(
+    request: Request,
+    task_queue: BackgroundTasks,
+    redis: Redis = Depends(get_redis_client),
+    email: EmailStr = Depends(email_form_field),
+    session: AsyncSession = Depends(get_database_session),
+):
+    try:
+        user = await read_user_by_email(session=session, email=email)
+        url = await generate_temporary_url(
+            redis,
+            {"id": user.id, "username": user.username, "email": user.email},
+            f"{request.base_url}v1/auth/activate",
+        )
+
+        task_queue.add_task(
+            send_activation_mail,
+            request,
+            f"Account activation for {user.username}",
+            "activation",
+            url,
+            user,
+        )
+
+        return {"msg": "Activation key sent."}
     except HTTPException as e:
         raise e

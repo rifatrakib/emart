@@ -1,3 +1,4 @@
+from pydantic import EmailStr
 from server.models.database.users import Account
 from server.models.schemas.inc.auth import SignupRequestSchema
 from server.security.authentication.password import pwd_generator
@@ -40,5 +41,29 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
 
     if not pwd_generator.verify_password(user.hash_salt, password, user.hashed_password):
         raise_401_unauthorized(message="Incorrect password.")
+
+    return user
+
+
+async def activate_user_account(session: AsyncSession, user_id: int) -> Account:
+    user = await session.get(Account, user_id)
+
+    if not user:
+        raise_404_not_found(message=f"The user with id {user_id} is not registered.")
+
+    user.is_active = True
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+async def read_user_by_email(session: AsyncSession, email: EmailStr) -> Account:
+    stmt = select(Account).where(Account.email == email)
+    query = await session.execute(stmt)
+    user = query.scalar()
+
+    if not user:
+        raise_404_not_found(message=f"The email {email} is not registered.")
 
     return user
