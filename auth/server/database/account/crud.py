@@ -1,3 +1,4 @@
+from pydantic import EmailStr
 from server.models.database.users import Account
 from server.models.schemas.inc.auth import SignupRequestSchema
 from server.security.authentication.password import pwd_generator
@@ -54,4 +55,15 @@ async def activate_user_account(session: AsyncSession, user_id: int) -> Account:
     session.add(user)
     await session.commit()
     await session.refresh(user)
+    return user
+
+
+async def read_user_by_email(session: AsyncSession, email: EmailStr) -> Account:
+    stmt = select(Account).where(Account.email == email)
+    query = await session.execute(stmt)
+    user = query.scalar()
+
+    if not user:
+        raise_404_not_found(message=f"The email {email} is not registered.")
+
     return user
