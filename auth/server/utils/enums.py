@@ -7,3 +7,10 @@ class Tags(str, Enum):
 
 class Versions(str, Enum):
     v1 = "Version 1"
+
+
+class Modes(str, Enum):
+    development = "development"
+    staging = "staging"
+    production = "production"
+    ignore_smtp = "ignore-smtp"
