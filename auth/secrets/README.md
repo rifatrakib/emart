@@ -1,0 +1,1 @@
+This directory contains one JSON file per mode of app development, and each file will map to one configuration class found in the `server.config.environments` module which subclasses `server.config.environments.base.BaseConfig` class. The name should be able to be mapped with any of the enum values from the `server.utils.enums.Modes` class without the `.json` extension.

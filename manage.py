@@ -1,13 +1,29 @@
 import subprocess
+from enum import Enum
+from typing import Union
 
 from typer import Typer
 
 app = Typer()
 
 
+class Modes(str, Enum):
+    development = "development"
+    staging = "staging"
+    production = "production"
+    ignore_smtp = "ignore-smtp"
+
+
 @app.command()
-def start_services():
-    subprocess.run("docker compose up --build")
+def start_services(mode: Union[str, None] = "development"):
+    try:
+        mode = Modes[mode]
+        with open("auth/.env", "w") as writer:
+            writer.write(f"MODE={mode}")
+
+        subprocess.run("docker compose up --build")
+    except KeyError:
+        print("Invalid mode")
 
 
 @app.command()
