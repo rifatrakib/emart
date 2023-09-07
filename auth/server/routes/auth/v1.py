@@ -10,7 +10,7 @@ from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
 from server.security.authentication.jwt import create_jwt
 from server.security.dependencies.clients import get_database_session, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form
-from server.utils.enums import Tags, Versions
+from server.utils.enums import Modes, Tags, Versions
 from server.utils.helper import generate_temporary_url
 from server.utils.smtp import send_activation_mail
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,6 +44,9 @@ async def register(
             {"id": new_user.id, "username": new_user.username, "email": new_user.email},
             f"{request.base_url}v1/auth/activate",
         )
+
+        if settings.MODE == Modes.ignore_smtp:
+            return {"msg": f"User account created. Activate your account using {url}"}
 
         task_queue.add_task(
             send_activation_mail,
@@ -134,6 +137,9 @@ async def resend_activation_key(
             {"id": user.id, "username": user.username, "email": user.email},
             f"{request.base_url}v1/auth/activate",
         )
+
+        if settings.MODE == Modes.ignore_smtp:
+            return {"msg": f"Activation key sent. Activate your account using {url}"}
 
         task_queue.add_task(
             send_activation_mail,
