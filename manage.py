@@ -15,7 +15,7 @@ class Modes(str, Enum):
 
 
 @app.command()
-def start_services(mode: Union[str, None] = "development"):
+def deploy(mode: Union[str, None] = "development"):
     try:
         if mode not in Modes.__members__.values():
             raise KeyError
@@ -29,7 +29,7 @@ def start_services(mode: Union[str, None] = "development"):
 
 
 @app.command()
-def stop_services():
+def terminate():
     subprocess.run("docker compose down")
     subprocess.run('docker image prune --force --filter "dangling=true"', shell=True)
 
