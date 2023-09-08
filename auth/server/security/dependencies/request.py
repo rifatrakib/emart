@@ -1,7 +1,7 @@
 from fastapi import Depends, Form
 from pydantic import EmailStr
 from server.models.schemas.base.fields import email_field, password_field, username_field
-from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
+from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.utils.exceptions import raise_422_unprocessable_entity
 
 
@@ -17,18 +17,26 @@ def password_form_field(password: str = Form(**password_field())) -> str:
     return password
 
 
-def repeat_password_form_field(
-    repeat_password: str = Form(
-        validation_alias="repeatPassword",
-        **{
-            **password_field(),
-            "title": "Repeat password",
-            "description": "Repeat password to confirm password.",
-            "example": "Admin@12345",
-        },
+def new_password_form_field(
+    newPassword: str = Form(
+        **password_field(
+            title="New password",
+            description="New password to replace the old one.",
+        ),
     ),
 ) -> str:
-    return repeat_password
+    return newPassword
+
+
+def repeat_password_form_field(
+    repeatPassword: str = Form(
+        **password_field(
+            title="Repeat password",
+            description="Repeat password to confirm password.",
+        ),
+    ),
+) -> str:
+    return repeatPassword
 
 
 def signup_form(
@@ -47,3 +55,13 @@ def login_form(
     password: str = Depends(password_form_field),
 ) -> LoginRequestSchema:
     return LoginRequestSchema(username=username, password=password)
+
+
+def password_change_form(
+    password: str = Depends(password_form_field),
+    new_password: str = Depends(new_password_form_field),
+    repeat_password: str = Depends(repeat_password_form_field),
+) -> PasswordChangeRequestSchema:
+    if new_password != repeat_password:
+        raise_422_unprocessable_entity("Passwords do not match.")
+    return PasswordChangeRequestSchema(current_password=password, new_password=new_password)
