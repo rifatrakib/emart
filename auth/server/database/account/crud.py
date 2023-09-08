@@ -1,6 +1,6 @@
 from pydantic import EmailStr
 from server.models.database.users import Account
-from server.models.schemas.inc.auth import SignupRequestSchema
+from server.models.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
 from server.security.authentication.password import pwd_generator
 from server.utils.exceptions import raise_401_unauthorized, raise_403_forbidden, raise_404_not_found, raise_409_conflict
 from sqlalchemy import select
@@ -16,7 +16,7 @@ async def create_user_account(session: AsyncSession, payload: SignupRequestSchem
             hashed_password=pwd_generator.generate_hashed_password(
                 hash_salt=new_account.hash_salt,
                 new_password=payload.password,
-            )
+            ),
         )
 
         session.add(instance=new_account)
@@ -67,3 +67,27 @@ async def read_user_by_email(session: AsyncSession, email: EmailStr) -> Account:
         raise_404_not_found(message=f"The email {email} is not registered.")
 
     return user
+
+
+async def update_password(
+    session: AsyncSession,
+    user_id: int,
+    payload: PasswordChangeRequestSchema,
+):
+    stmt = select(Account).where(Account.id == user_id)
+    query = await session.execute(stmt)
+    user = query.scalar()
+
+    if not pwd_generator.verify_password(user.hash_salt, payload.current_password, user.hashed_password):
+        raise_401_unauthorized(message="Incorrect password.")
+
+    user.set_hashed_password(
+        hashed_password=pwd_generator.generate_hashed_password(
+            hash_salt=user.hash_salt,
+            new_password=payload.new_password,
+        ),
+    )
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
