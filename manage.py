@@ -17,7 +17,9 @@ class Modes(str, Enum):
 @app.command()
 def start_services(mode: Union[str, None] = "development"):
     try:
-        mode = Modes[mode]
+        if mode not in Modes.__members__.values():
+            raise KeyError
+
         with open("auth/.env", "w") as writer:
             writer.write(f"MODE={mode}")
 
