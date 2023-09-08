@@ -6,12 +6,12 @@ from server.models.schemas.base.fields import email_field, password_field, usern
 
 
 class LoginRequestSchema(BaseRequestSchema):
-    username: str = username_field(Field)
-    password: str = password_field(Field)
+    username: str = Field(**username_field())
+    password: str = Field(**password_field())
 
 
 class SignupRequestSchema(LoginRequestSchema):
-    email: EmailStr = email_field(Field)
+    email: EmailStr = Field(**email_field())
 
     @validator("password", pre=True)
     def validate_password_pattern(cls, v) -> str:

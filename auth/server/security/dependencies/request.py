@@ -5,26 +5,30 @@ from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSche
 from server.utils.exceptions import raise_422_unprocessable_entity
 
 
-def username_form_field(username: str = username_field(Form)) -> str:
+def username_form_field(username: str = Form(**username_field())) -> str:
     return username
 
 
-def email_form_field(email: EmailStr = email_field(Form)) -> EmailStr:
+def email_form_field(email: EmailStr = Form(**email_field())) -> EmailStr:
     return email
 
 
-def password_form_field(password: str = password_field(Form)) -> str:
+def password_form_field(password: str = Form(**password_field())) -> str:
     return password
 
 
 def repeat_password_form_field(
-    repeatPassword: str = Form(
-        title="Repeat password",
-        description="Repeat password to confirm password.",
-        example="Admin@12345",
+    repeat_password: str = Form(
+        validation_alias="repeatPassword",
+        **{
+            **password_field(),
+            "title": "Repeat password",
+            "description": "Repeat password to confirm password.",
+            "example": "Admin@12345",
+        },
     ),
 ) -> str:
-    return repeatPassword
+    return repeat_password
 
 
 def signup_form(

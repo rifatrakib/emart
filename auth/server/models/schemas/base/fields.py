@@ -1,8 +1,8 @@
-from typing import Type
+from typing import Any, Dict
 
 
-def username_field(class_: Type) -> Type:
-    return class_(
+def username_field() -> Dict[str, Any]:
+    return dict(
         title="username",
         decription="""
             Unique username containing letters, numbers, and
@@ -14,15 +14,15 @@ def username_field(class_: Type) -> Type:
     )
 
 
-def email_field(class_: Type) -> Type:
-    return class_(
+def email_field() -> Dict[str, Any]:
+    return dict(
         title="email",
         decription="Unique email that can be used to identify users.",
     )
 
 
-def password_field(class_: Type) -> Type:
-    return class_(
+def password_field() -> Dict[str, Any]:
+    return dict(
         title="password",
         decription="""
             Password containing at least 1 uppercase letter, 1 lowercase letter,
