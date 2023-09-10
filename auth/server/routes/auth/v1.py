@@ -102,7 +102,6 @@ async def login(
     summary="Activate user account",
     description="Activate a user account.",
     response_model=MessageResponseSchema,
-    status_code=status.HTTP_200_OK,
 )
 async def activate_account(
     redis: Redis = Depends(get_redis_client),
@@ -164,7 +163,6 @@ async def resend_activation_key(
     summary="Change user password",
     description="Change a user's password.",
     response_model=MessageResponseSchema,
-    status_code=status.HTTP_200_OK,
 )
 async def change_password(
     user: TokenUser = Depends(authenticate_active_user),
@@ -174,5 +172,43 @@ async def change_password(
     try:
         await update_password(session=session, user_id=user.id, payload=payload)
         return {"msg": "Password changed."}
+    except HTTPException as e:
+        raise e
+
+
+@router.post(
+    "/password/forgot",
+    summary="Forgot password",
+    description="Send password reset link to user.",
+    response_model=MessageResponseSchema,
+)
+async def forgot_password(
+    request: Request,
+    task_queue: BackgroundTasks,
+    redis: Redis = Depends(get_redis_client),
+    email: EmailStr = Depends(email_form_field),
+    session: AsyncSession = Depends(get_database_session),
+) -> MessageResponseSchema:
+    try:
+        user = await read_user_by_email(session=session, email=email)
+        url = generate_temporary_url(
+            redis,
+            {"id": user.id, "username": user.username, "email": user.email},
+            f"{request.base_url}v1/auth/password/reset",
+        )
+
+        if settings.MODE == Modes.ignore_smtp:
+            return {"msg": f"To reset the password of your account, please use {url}"}
+
+        task_queue.add_task(
+            send_activation_mail,
+            request,
+            f"Password reset requested by {user.username}",
+            "password-reset",
+            url,
+            user,
+        )
+
+        return {"msg": "Please check your email for the temporary password reset link."}
     except HTTPException as e:
         raise e
