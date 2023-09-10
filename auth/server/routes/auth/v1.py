@@ -4,7 +4,14 @@ from aioredis.client import Redis
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 from pydantic import EmailStr
 from server.config.factory import settings
-from server.database.account.crud import activate_user_account, authenticate_user, create_user_account, read_user_by_email, update_password
+from server.database.account.crud import (
+    activate_user_account,
+    authenticate_user,
+    create_user_account,
+    read_user_by_email,
+    reset_password,
+    update_password,
+)
 from server.database.cache.manager import pop_from_cache, validate_key, write_data_to_cache
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
@@ -12,7 +19,13 @@ from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
 from server.security.authentication.jwt import create_jwt
 from server.security.dependencies.acl import authenticate_active_user
 from server.security.dependencies.clients import get_database_session, get_redis_client
-from server.security.dependencies.request import email_form_field, login_form, password_change_form, signup_form
+from server.security.dependencies.request import (
+    email_form_field,
+    login_form,
+    password_change_form,
+    password_reset_request_form,
+    signup_form,
+)
 from server.utils.enums import Modes, Tags, Versions
 from server.utils.helper import generate_temporary_url
 from server.utils.smtp import send_activation_mail
@@ -230,5 +243,32 @@ async def validate_password_reset_link(
 ):
     try:
         return await validate_key(redis, validation_key)
+    except HTTPException as e:
+        raise e
+
+
+@router.patch(
+    "/password/reset",
+    summary="Verify email and reset password",
+    description="Use secret key sent in mail to verify and reset password.",
+    response_model=MessageResponseSchema,
+)
+async def reset_user_password(
+    validation_key: str = Query(
+        ...,
+        title="Validation key",
+        description="Validation key included as query parameter in the link sent to user email.",
+    ),
+    new_password: str = Depends(password_reset_request_form),
+    session: AsyncSession = Depends(get_database_session),
+):
+    try:
+        user = pop_from_cache(key=validation_key)
+        await reset_password(
+            session=session,
+            account_id=user["account_id"],
+            new_password=new_password,
+        )
+        return MessageResponseSchema(msg="Password was reset successfully!")
     except HTTPException as e:
         raise e

@@ -65,3 +65,12 @@ def password_change_form(
     if new_password != repeat_password:
         raise_422_unprocessable_entity("Passwords do not match.")
     return PasswordChangeRequestSchema(current_password=password, new_password=new_password)
+
+
+def password_reset_request_form(
+    new_password: str = Depends(new_password_form_field),
+    repeat_password: str = Depends(repeat_password_form_field),
+) -> str:
+    if new_password != repeat_password:
+        raise_422_unprocessable_entity("Passwords do not match.")
+    return new_password
