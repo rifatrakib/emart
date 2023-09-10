@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, R
 from pydantic import EmailStr
 from server.config.factory import settings
 from server.database.account.crud import activate_user_account, authenticate_user, create_user_account, read_user_by_email, update_password
-from server.database.cache.manager import pop_from_cache, write_data_to_cache
+from server.database.cache.manager import pop_from_cache, validate_key, write_data_to_cache
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
@@ -210,5 +210,25 @@ async def forgot_password(
         )
 
         return {"msg": "Please check your email for the temporary password reset link."}
+    except HTTPException as e:
+        raise e
+
+
+@router.options(
+    "/password/reset",
+    summary="Validate password reset link",
+    description="Validate password reset link.",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def validate_password_reset_link(
+    redis: Redis = Depends(get_redis_client),
+    validation_key: str = Query(
+        ...,
+        title="Validation key",
+        description="Validation key included as query parameter in the link sent to user email.",
+    ),
+):
+    try:
+        return await validate_key(redis, validation_key)
     except HTTPException as e:
         raise e
