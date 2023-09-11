@@ -272,3 +272,41 @@ async def reset_user_password(
         return MessageResponseSchema(msg="Password was reset successfully!")
     except HTTPException as e:
         raise e
+
+
+@router.post(
+    "/email/change",
+    summary="Request email change",
+    description="Send email change link to user.",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def request_email_change(
+    request: Request,
+    task_queue: BackgroundTasks,
+    redis: Redis = Depends(get_redis_client),
+    user: TokenUser = Depends(authenticate_active_user),
+    new_email: EmailStr = Depends(email_form_field),
+) -> MessageResponseSchema:
+    try:
+        url = generate_temporary_url(
+            redis,
+            {"id": user.id, "username": user.username, "email": new_email},
+            f"{request.base_url}v1/auth/email/change",
+        )
+
+        if settings.MODE == Modes.ignore_smtp:
+            return {"msg": f"To change the account email, please use {url}"}
+
+        task_queue.add_task(
+            send_activation_mail,
+            request,
+            f"Account email update requested by {user.username}",
+            "update-email",
+            url,
+            user,
+        )
+
+        return {"msg": "Please check your email for the temporary link to update account email."}
+    except HTTPException as e:
+        raise e
