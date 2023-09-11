@@ -24,3 +24,10 @@ async def pop_from_cache(client: Redis, key: str) -> str:
         return data
     except TypeError:
         raise_410_gone("Token expired")
+
+
+async def validate_key(client: Redis, key: str) -> bool:
+    status = await client.exists(key)
+    if not status:
+        raise_410_gone("Link expired!")
+    return status

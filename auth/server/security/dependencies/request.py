@@ -1,27 +1,39 @@
 from fastapi import Depends, Form
 from pydantic import EmailStr
 from server.models.schemas.base.fields import email_field, password_field, username_field
-from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
+from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.utils.exceptions import raise_422_unprocessable_entity
 
 
-def username_form_field(username: str = username_field(Form)) -> str:
+def username_form_field(username: str = Form(**username_field())) -> str:
     return username
 
 
-def email_form_field(email: EmailStr = email_field(Form)) -> EmailStr:
+def email_form_field(email: EmailStr = Form(**email_field())) -> EmailStr:
     return email
 
 
-def password_form_field(password: str = password_field(Form)) -> str:
+def password_form_field(password: str = Form(**password_field())) -> str:
     return password
+
+
+def new_password_form_field(
+    newPassword: str = Form(
+        **password_field(
+            title="New password",
+            description="New password to replace the old one.",
+        ),
+    ),
+) -> str:
+    return newPassword
 
 
 def repeat_password_form_field(
     repeatPassword: str = Form(
-        title="Repeat password",
-        description="Repeat password to confirm password.",
-        example="Admin@12345",
+        **password_field(
+            title="Repeat password",
+            description="Repeat password to confirm password.",
+        ),
     ),
 ) -> str:
     return repeatPassword
@@ -43,3 +55,22 @@ def login_form(
     password: str = Depends(password_form_field),
 ) -> LoginRequestSchema:
     return LoginRequestSchema(username=username, password=password)
+
+
+def password_change_form(
+    password: str = Depends(password_form_field),
+    new_password: str = Depends(new_password_form_field),
+    repeat_password: str = Depends(repeat_password_form_field),
+) -> PasswordChangeRequestSchema:
+    if new_password != repeat_password:
+        raise_422_unprocessable_entity("Passwords do not match.")
+    return PasswordChangeRequestSchema(current_password=password, new_password=new_password)
+
+
+def password_reset_request_form(
+    new_password: str = Depends(new_password_form_field),
+    repeat_password: str = Depends(repeat_password_form_field),
+) -> str:
+    if new_password != repeat_password:
+        raise_422_unprocessable_entity("Passwords do not match.")
+    return new_password

@@ -1,24 +1,25 @@
-import re
-
-from pydantic import EmailStr, Field, validator
+from pydantic import EmailStr, validator
 from server.models.schemas.base import BaseRequestSchema
-from server.models.schemas.base.fields import email_field, password_field, username_field
+from server.utils.helper import validate_password
 
 
 class LoginRequestSchema(BaseRequestSchema):
-    username: str = username_field(Field)
-    password: str = password_field(Field)
+    username: str
+    password: str
 
 
 class SignupRequestSchema(LoginRequestSchema):
-    email: EmailStr = email_field(Field)
+    email: EmailStr
 
     @validator("password", pre=True)
     def validate_password_pattern(cls, v) -> str:
-        pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,64}$"
-        if not re.match(pattern, v):
-            raise ValueError(
-                "Password must be between 8 and 64 characters long and contain at least one uppercase letter, one lowercase letter, one"
-                " digit and one special character."
-            )
-        return v
+        return validate_password(v)
+
+
+class PasswordChangeRequestSchema(BaseRequestSchema):
+    current_password: str
+    new_password: str
+
+    @validator("new_password", pre=True)
+    def validate_password_pattern(cls, v) -> str:
+        return validate_password(v)
