@@ -13,6 +13,7 @@ from server.database.account.crud import (
     update_password,
 )
 from server.database.cache.manager import pop_from_cache, validate_key, write_data_to_cache
+from server.models.database.users import Account
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
@@ -289,7 +290,7 @@ async def request_email_change(
     new_email: EmailStr = Depends(email_form_field),
 ) -> MessageResponseSchema:
     try:
-        url = generate_temporary_url(
+        url = await generate_temporary_url(
             redis,
             {"id": user.id, "username": user.username, "email": new_email},
             f"{request.base_url}v1/auth/email/change",
@@ -298,6 +299,7 @@ async def request_email_change(
         if settings.MODE == Modes.ignore_smtp:
             return {"msg": f"To change the account email, please use {url}"}
 
+        user = Account(**{**user.model_dump(), "email": new_email})
         task_queue.add_task(
             send_activation_mail,
             request,
@@ -308,5 +310,25 @@ async def request_email_change(
         )
 
         return {"msg": "Please check your email for the temporary link to update account email."}
+    except HTTPException as e:
+        raise e
+
+
+@router.options(
+    "/email/change",
+    summary="Validate email change link",
+    description="Validate email change link.",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def validate_email_change_link(
+    redis: Redis = Depends(get_redis_client),
+    validation_key: str = Query(
+        ...,
+        title="Validation key",
+        description="Validation key included as query parameter in the link sent to user email.",
+    ),
+):
+    try:
+        return await validate_key(redis, validation_key)
     except HTTPException as e:
         raise e
