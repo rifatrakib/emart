@@ -1,7 +1,7 @@
 import json
 
 from aioredis.client import Redis
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 from server.config.factory import settings
 from server.database.account.crud import (
@@ -27,6 +27,7 @@ from server.security.dependencies.request import (
     password_change_form,
     password_reset_request_form,
     signup_form,
+    temporary_url_key,
 )
 from server.utils.enums import Modes, Tags, Versions
 from server.utils.helper import generate_temporary_url
@@ -121,11 +122,7 @@ async def login(
 async def activate_account(
     redis: Redis = Depends(get_redis_client),
     session: AsyncSession = Depends(get_database_session),
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
 ) -> MessageResponseSchema:
     try:
         user = await pop_from_cache(redis, validation_key)
@@ -237,11 +234,7 @@ async def forgot_password(
 )
 async def validate_password_reset_link(
     redis: Redis = Depends(get_redis_client),
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
 ):
     try:
         return await validate_key(redis, validation_key)
@@ -256,11 +249,7 @@ async def validate_password_reset_link(
     response_model=MessageResponseSchema,
 )
 async def reset_user_password(
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
     new_password: str = Depends(password_reset_request_form),
     session: AsyncSession = Depends(get_database_session),
 ):
@@ -323,11 +312,7 @@ async def request_email_change(
 )
 async def validate_email_change_link(
     redis: Redis = Depends(get_redis_client),
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
 ):
     try:
         return await validate_key(redis, validation_key)
@@ -336,18 +321,14 @@ async def validate_email_change_link(
 
 
 @router.patch(
-    "/update/email",
+    "/email/change",
     summary="Change user email",
     description="Change a user's email.",
     response_model=MessageResponseSchema,
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def change_user_email(
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
     session: AsyncSession = Depends(get_database_session),
 ):
     try:
