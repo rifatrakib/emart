@@ -1,7 +1,7 @@
 import json
 
 from aioredis.client import Redis
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 from server.config.factory import settings
 from server.database.account.crud import (
@@ -10,9 +10,11 @@ from server.database.account.crud import (
     create_user_account,
     read_user_by_email,
     reset_password,
+    update_email,
     update_password,
 )
 from server.database.cache.manager import pop_from_cache, validate_key, write_data_to_cache
+from server.models.database.users import Account
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
@@ -25,6 +27,7 @@ from server.security.dependencies.request import (
     password_change_form,
     password_reset_request_form,
     signup_form,
+    temporary_url_key,
 )
 from server.utils.enums import Modes, Tags, Versions
 from server.utils.helper import generate_temporary_url
@@ -119,11 +122,7 @@ async def login(
 async def activate_account(
     redis: Redis = Depends(get_redis_client),
     session: AsyncSession = Depends(get_database_session),
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
 ) -> MessageResponseSchema:
     try:
         user = await pop_from_cache(redis, validation_key)
@@ -235,11 +234,7 @@ async def forgot_password(
 )
 async def validate_password_reset_link(
     redis: Redis = Depends(get_redis_client),
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
 ):
     try:
         return await validate_key(redis, validation_key)
@@ -254,11 +249,7 @@ async def validate_password_reset_link(
     response_model=MessageResponseSchema,
 )
 async def reset_user_password(
-    validation_key: str = Query(
-        ...,
-        title="Validation key",
-        description="Validation key included as query parameter in the link sent to user email.",
-    ),
+    validation_key: str = Depends(temporary_url_key),
     new_password: str = Depends(password_reset_request_form),
     session: AsyncSession = Depends(get_database_session),
 ):
@@ -270,5 +261,83 @@ async def reset_user_password(
             new_password=new_password,
         )
         return MessageResponseSchema(msg="Password was reset successfully!")
+    except HTTPException as e:
+        raise e
+
+
+@router.post(
+    "/email/change",
+    summary="Request email change",
+    description="Send email change link to user.",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def request_email_change(
+    request: Request,
+    task_queue: BackgroundTasks,
+    redis: Redis = Depends(get_redis_client),
+    user: TokenUser = Depends(authenticate_active_user),
+    new_email: EmailStr = Depends(email_form_field),
+) -> MessageResponseSchema:
+    try:
+        url = await generate_temporary_url(
+            redis,
+            {"id": user.id, "username": user.username, "email": new_email},
+            f"{request.base_url}v1/auth/email/change",
+        )
+
+        if settings.MODE == Modes.ignore_smtp:
+            return {"msg": f"To change the account email, please use {url}"}
+
+        user = Account(**{**user.model_dump(), "email": new_email})
+        task_queue.add_task(
+            send_activation_mail,
+            request,
+            f"Account email update requested by {user.username}",
+            "update-email",
+            url,
+            user,
+        )
+
+        return {"msg": "Please check your email for the temporary link to update account email."}
+    except HTTPException as e:
+        raise e
+
+
+@router.options(
+    "/email/change",
+    summary="Validate email change link",
+    description="Validate email change link.",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def validate_email_change_link(
+    redis: Redis = Depends(get_redis_client),
+    validation_key: str = Depends(temporary_url_key),
+):
+    try:
+        return await validate_key(redis, validation_key)
+    except HTTPException as e:
+        raise e
+
+
+@router.patch(
+    "/email/change",
+    summary="Change user email",
+    description="Change a user's email.",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def change_user_email(
+    validation_key: str = Depends(temporary_url_key),
+    session: AsyncSession = Depends(get_database_session),
+):
+    try:
+        user = await pop_from_cache(key=validation_key)
+        await update_email(
+            session=session,
+            account_id=user["account_id"],
+            new_email=user["new_email"],
+        )
+        return MessageResponseSchema(msg="Email was changed successfully!")
     except HTTPException as e:
         raise e

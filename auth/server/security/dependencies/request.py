@@ -1,4 +1,4 @@
-from fastapi import Depends, Form
+from fastapi import Depends, Form, Query
 from pydantic import EmailStr
 from server.models.schemas.base.fields import email_field, password_field, username_field
 from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
@@ -15,6 +15,16 @@ def email_form_field(email: EmailStr = Form(**email_field())) -> EmailStr:
 
 def password_form_field(password: str = Form(**password_field())) -> str:
     return password
+
+
+def temporary_url_key(
+    validation_key: str = Query(
+        ...,
+        title="Validation key",
+        description="Validation key included as query parameter in the link sent to user email.",
+    ),
+):
+    return validation_key
 
 
 def new_password_form_field(
