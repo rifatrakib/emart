@@ -112,3 +112,18 @@ async def reset_password(
     session.add(user)
     await session.commit()
     await session.refresh(user)
+
+
+async def update_email(
+    session: AsyncSession,
+    user_id: int,
+    new_email: EmailStr,
+):
+    stmt = select(Account).where(Account.id == user_id)
+    query = await session.execute(stmt)
+    user = query.scalar()
+
+    user.email = new_email
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)

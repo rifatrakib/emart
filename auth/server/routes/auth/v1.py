@@ -10,6 +10,7 @@ from server.database.account.crud import (
     create_user_account,
     read_user_by_email,
     reset_password,
+    update_email,
     update_password,
 )
 from server.database.cache.manager import pop_from_cache, validate_key, write_data_to_cache
@@ -330,5 +331,32 @@ async def validate_email_change_link(
 ):
     try:
         return await validate_key(redis, validation_key)
+    except HTTPException as e:
+        raise e
+
+
+@router.patch(
+    "/update/email",
+    summary="Change user email",
+    description="Change a user's email.",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def change_user_email(
+    validation_key: str = Query(
+        ...,
+        title="Validation key",
+        description="Validation key included as query parameter in the link sent to user email.",
+    ),
+    session: AsyncSession = Depends(get_database_session),
+):
+    try:
+        user = await pop_from_cache(key=validation_key)
+        await update_email(
+            session=session,
+            account_id=user["account_id"],
+            new_email=user["new_email"],
+        )
+        return MessageResponseSchema(msg="Email was changed successfully!")
     except HTTPException as e:
         raise e
