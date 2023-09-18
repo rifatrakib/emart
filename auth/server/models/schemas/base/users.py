@@ -24,4 +24,6 @@ class ProfileBase(BaseAPISchema):
     def validate_birth_date(cls, value: Union[str, None]) -> Union[date, None]:
         if value is None:
             return None
+        if isinstance(value, date):
+            return value
         return date.fromisoformat(value)
