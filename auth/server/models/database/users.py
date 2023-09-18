@@ -17,7 +17,10 @@ class Account(Base):
     user_profile: Mapped["Profile"] = relationship(
         "Profile",
         back_populates="user_account",
+        primaryjoin="Account.id == Profile.account_id",
         uselist=False,
+        lazy="joined",
+        innerjoin=True,
     )
 
     def __repr__(self) -> str:
@@ -51,7 +54,10 @@ class Profile(Base):
         Account,
         cascade="all, delete",
         back_populates="user_profile",
+        primaryjoin="Profile.account_id == Account.id",
         single_parent=True,
+        lazy="joined",
+        innerjoin=True,
     )
 
     def __repr__(self) -> str:
