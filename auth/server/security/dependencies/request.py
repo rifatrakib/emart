@@ -1,10 +1,10 @@
-from typing import Callable
+from typing import Callable, Union
 
 from fastapi import Depends, Form, Query
 from pydantic import EmailStr
 from server.models.schemas.base.fields import birth_date_field, email_field, gender_field, name_field, password_field, username_field
 from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
-from server.models.schemas.inc.profile import ProfileCreateSchema
+from server.models.schemas.inc.profile import ProfileCreateSchema, ProfileUpdateSchema
 from server.utils.enums import Gender
 from server.utils.exceptions import raise_422_unprocessable_entity
 
@@ -161,13 +161,34 @@ def gender_form_field(optional: bool = False) -> Callable:
 
 def profile_create_form(
     first_name: str = Depends(first_name_form_field()),
-    middle_name: str = Depends(middle_name_form_field),
+    middle_name: Union[str, None] = Depends(middle_name_form_field),
     last_name: str = Depends(last_name_form_field()),
-    birth_date: str = Depends(birth_date_form_field(optional=True)),
-    address: str = Depends(address_form_field(optional=True)),
-    gender: Gender = Depends(gender_form_field(optional=True)),
+    birth_date: Union[str, None] = Depends(birth_date_form_field(optional=True)),
+    address: Union[str, None] = Depends(address_form_field(optional=True)),
+    gender: Union[Gender, None] = Depends(gender_form_field(optional=True)),
 ) -> ProfileCreateSchema:
     return ProfileCreateSchema(
+        first_name=first_name,
+        middle_name=middle_name,
+        last_name=last_name,
+        birth_date=birth_date,
+        address=address,
+        gender=gender,
+    )
+
+
+def profile_update_form(
+    first_name: Union[str, None] = Depends(first_name_form_field(optional=True)),
+    middle_name: Union[str, None] = Depends(middle_name_form_field),
+    last_name: Union[str, None] = Depends(last_name_form_field(optional=True)),
+    birth_date: Union[str, None] = Depends(birth_date_form_field(optional=True)),
+    address: Union[str, None] = Depends(address_form_field(optional=True)),
+    gender: Union[Gender, None] = Depends(gender_form_field(optional=True)),
+) -> ProfileUpdateSchema:
+    if all(not param for param in (first_name, middle_name, last_name, birth_date, address, gender)):
+        raise_422_unprocessable_entity("At least one of the parameters must not be None.")
+
+    return ProfileUpdateSchema(
         first_name=first_name,
         middle_name=middle_name,
         last_name=last_name,
