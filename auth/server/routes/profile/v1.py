@@ -6,6 +6,7 @@ from server.models.schemas.out.auth import TokenUser
 from server.models.schemas.out.profile import ProfileResponse
 from server.security.dependencies.acl import authenticate_active_user
 from server.security.dependencies.clients import get_database_session
+from server.security.dependencies.request import profile_create_form
 from server.utils.enums import Tags, Versions
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/v1/profiles", tags=[Tags.profile, Versions.v1])
     status_code=status.HTTP_201_CREATED,
 )
 async def create_profile(
-    payload: ProfileCreateSchema,
+    payload: ProfileCreateSchema = Depends(profile_create_form),
     user: TokenUser = Depends(authenticate_active_user),
     session: AsyncSession = Depends(get_database_session),
 ):

@@ -1,7 +1,11 @@
+from typing import Callable
+
 from fastapi import Depends, Form, Query
 from pydantic import EmailStr
-from server.models.schemas.base.fields import email_field, password_field, username_field
+from server.models.schemas.base.fields import birth_date_field, email_field, gender_field, name_field, password_field, username_field
 from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
+from server.models.schemas.inc.profile import ProfileCreateSchema
+from server.utils.enums import Gender
 from server.utils.exceptions import raise_422_unprocessable_entity
 
 
@@ -84,3 +88,90 @@ def password_reset_request_form(
     if new_password != repeat_password:
         raise_422_unprocessable_entity("Passwords do not match.")
     return new_password
+
+
+def first_name_form_field(optional: bool = False) -> Callable:
+    def _first_name_form_field(
+        firstName: str = Form(
+            None if optional else ...,
+            **name_field(place="first", max_length=64),
+        ),
+    ) -> str:
+        return firstName
+
+    return _first_name_form_field
+
+
+def middle_name_form_field(
+    middleName: str = Form(
+        default=None,
+        **name_field(place="middle", max_length=256),
+    ),
+) -> str:
+    return middleName
+
+
+def last_name_form_field(optional: bool = False) -> Callable:
+    def _last_name_form_field(
+        lastName: str = Form(
+            None if optional else ...,
+            **name_field(place="last", max_length=64),
+        ),
+    ) -> str:
+        return lastName
+
+    return _last_name_form_field
+
+
+def birth_date_form_field(optional: bool = False) -> Callable:
+    def _birth_date_form_field(
+        birthDate: str = Form(
+            None if optional else ...,
+            **birth_date_field(),
+        ),
+    ) -> str:
+        return birthDate
+
+    return _birth_date_form_field
+
+
+def address_form_field(optional: bool = False) -> Callable:
+    def _address_form_field(
+        address: str = Form(
+            None if optional else ...,
+            **birth_date_field(),
+        ),
+    ) -> str:
+        return address
+
+    return _address_form_field
+
+
+def gender_form_field(optional: bool = False) -> Callable:
+    def _gender_form_field(
+        gender: Gender = Form(
+            None if optional else ...,
+            **gender_field(),
+        ),
+    ) -> Gender:
+        return gender
+
+    return _gender_form_field
+
+
+def profile_create_form(
+    first_name: str = Depends(first_name_form_field()),
+    middle_name: str = Depends(middle_name_form_field),
+    last_name: str = Depends(last_name_form_field()),
+    birth_date: str = Depends(birth_date_form_field(optional=True)),
+    address: str = Depends(address_form_field(optional=True)),
+    gender: Gender = Depends(gender_form_field(optional=True)),
+) -> ProfileCreateSchema:
+    return ProfileCreateSchema(
+        first_name=first_name,
+        middle_name=middle_name,
+        last_name=last_name,
+        birth_date=birth_date,
+        address=address,
+        gender=gender,
+    )
