@@ -54,14 +54,13 @@ async def update_user_profile(
     if not update_user:
         raise_404_not_found(message=f"No profile found for the user with account id {account_id}.")
 
-    for field, update_value in payload.model_dump().items():
-        if update_value:
-            if field == "birth_date":
-                update_user.set_birth_date(birth_date=update_value)
-            if field == "gender":
-                update_user.set_gender(gender=update_value)
-            else:
-                setattr(update_user, field, update_value)
+    for field, update_value in payload.model_dump(exclude_unset=True).items():
+        if field == "birth_date":
+            update_user.set_birth_date(birth_date=update_value)
+        elif field == "gender":
+            update_user.set_gender(gender=update_value)
+        else:
+            setattr(update_user, field, update_value)
 
     await session.flush()
     await session.commit()
