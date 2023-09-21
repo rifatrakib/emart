@@ -20,6 +20,8 @@ def password_form_field(password: str = Form(**password_field())) -> str:
 def temporary_url_key(
     validation_key: str = Query(
         ...,
+        alias="key",
+        validation_alias="key",
         title="Validation key",
         description="Validation key included as query parameter in the link sent to user email.",
     ),
@@ -28,25 +30,29 @@ def temporary_url_key(
 
 
 def new_password_form_field(
-    newPassword: str = Form(
+    new_password: str = Form(
         **password_field(
+            alias="newPassword",
+            validation_alias="newPassword",
             title="New password",
             description="New password to replace the old one.",
         ),
     ),
 ) -> str:
-    return newPassword
+    return new_password
 
 
 def repeat_password_form_field(
-    repeatPassword: str = Form(
+    repeat_password: str = Form(
         **password_field(
+            alias="repeatPassword",
+            validation_alias="repeatPassword",
             title="Repeat password",
             description="Repeat password to confirm password.",
         ),
     ),
 ) -> str:
-    return repeatPassword
+    return repeat_password
 
 
 def signup_form(

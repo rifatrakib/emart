@@ -39,3 +39,37 @@ def password_field(**kwargs) -> Dict[str, Any]:
     if kwargs:
         field_attributes.update(kwargs)
     return field_attributes
+
+
+def name_field(**kwargs) -> Dict[str, Any]:
+    return dict(
+        title=f"{kwargs['place']} name",
+        decription=f"{kwargs['place'].title()} name of the user.",
+        example="John",
+        max_length=kwargs["max_length"],
+    )
+
+
+def address_field() -> Dict[str, Any]:
+    return dict(
+        title="address",
+        decription="Address of the user.",
+        example="1234 Main St. New York, NY 10001",
+        max_length=1024,
+    )
+
+
+def birth_date_field() -> Dict[str, Any]:
+    return dict(
+        title="birth date",
+        decription="Birth date of the user.",
+        example="2000-01-01",
+    )
+
+
+def gender_field() -> Dict[str, Any]:
+    return dict(
+        title="gender",
+        description="Gender of the user.",
+        example="m",
+    )

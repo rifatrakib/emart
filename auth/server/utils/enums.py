@@ -3,6 +3,7 @@ from enum import Enum
 
 class Tags(str, Enum):
     authentication = "Authentication"
+    profile = "Profile"
 
 
 class Versions(str, Enum):
@@ -14,3 +15,8 @@ class Modes(str, Enum):
     staging = "staging"
     production = "production"
     ignore_smtp = "ignore-smtp"
+
+
+class Gender(str, Enum):
+    male = "m"
+    female = "f"

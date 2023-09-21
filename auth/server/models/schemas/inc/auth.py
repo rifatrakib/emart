@@ -1,5 +1,6 @@
 from pydantic import EmailStr, validator
 from server.models.schemas.base import BaseRequestSchema
+from server.utils.exceptions import raise_422_unprocessable_entity
 from server.utils.helper import validate_password
 
 
@@ -13,7 +14,10 @@ class SignupRequestSchema(LoginRequestSchema):
 
     @validator("password", pre=True)
     def validate_password_pattern(cls, v) -> str:
-        return validate_password(v)
+        try:
+            return validate_password(v)
+        except ValueError as e:
+            raise_422_unprocessable_entity(e.args[0])
 
 
 class PasswordChangeRequestSchema(BaseRequestSchema):
@@ -22,4 +26,7 @@ class PasswordChangeRequestSchema(BaseRequestSchema):
 
     @validator("new_password", pre=True)
     def validate_password_pattern(cls, v) -> str:
-        return validate_password(v)
+        try:
+            return validate_password(v)
+        except ValueError as e:
+            raise_422_unprocessable_entity(e.args[0])

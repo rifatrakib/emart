@@ -29,6 +29,7 @@ class Base(DeclarativeBase):
         DateTime(timezone=True),
         nullable=True,
         server_onupdate=FetchedValue(for_update=True),
+        onupdate=functions.now(),
     )
 
 
