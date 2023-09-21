@@ -26,7 +26,7 @@ async def create_profile(
 ):
     try:
         new_profile = await create_user_profile(session, user.id, payload)
-        return {"message": f"Profile created successfully for user {new_profile.user_account.username}."}
+        return {"msg": f"Profile created successfully for user {new_profile.user_account.username}."}
     except HTTPException as e:
         raise e
 
@@ -36,6 +36,7 @@ async def create_profile(
     summary="Get a user profile",
     description="Get a user profile by username.",
     response_model=ProfileResponse,
+    dependencies=[Depends(authenticate_active_user)],
 )
 async def read_user_profile(
     username: str,

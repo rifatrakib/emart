@@ -17,10 +17,7 @@ class Account(Base):
     user_profile: Mapped["Profile"] = relationship(
         "Profile",
         back_populates="user_account",
-        primaryjoin="Account.id == Profile.account_id",
         uselist=False,
-        lazy="joined",
-        innerjoin=True,
     )
 
     def __repr__(self) -> str:
