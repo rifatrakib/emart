@@ -3,6 +3,7 @@ from enum import Enum
 
 class Tags(str, Enum):
     authentication = "Authentication"
+    account = "Account"
     profile = "Profile"
 
 
