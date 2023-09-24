@@ -84,6 +84,10 @@ class BaseConfig(RootConfig):
     PASSWORD_HASH_ALGORITHM: str
     HASH_SALT: str
 
+    # SSO Configurations
+    GOOGLE_OAUTH_CLIENT_ID: str
+    GOOGLE_OAUTH_CLIENT_SECRET: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @classmethod
