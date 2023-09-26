@@ -18,10 +18,41 @@ async def create_user_profile(
             last_name=payload.last_name,
             address=payload.address,
         )
-        new_profile.set_gender(gender=payload.gender)
-        new_profile.set_birth_date(birth_date=payload.birth_date)
-        new_profile.account_id = account_id
 
+        if payload.gender:
+            new_profile.set_gender(gender=payload.gender)
+        if payload.birth_date:
+            new_profile.set_birth_date(birth_date=payload.birth_date)
+
+        new_profile.account_id = account_id
+        session.add(instance=new_profile)
+        await session.commit()
+        await session.refresh(instance=new_profile)
+
+        return new_profile
+    except IntegrityError:
+        raise_409_conflict(message="profile already exists")
+
+
+async def create_admin_profile(
+    session: AsyncSession,
+    admin_account: Account,
+    payload: ProfileCreateSchema,
+) -> Profile:
+    try:
+        new_profile = Profile(
+            first_name=payload.first_name,
+            middle_name=payload.middle_name,
+            last_name=payload.last_name,
+            address=payload.address,
+        )
+
+        if payload.gender:
+            new_profile.set_gender(gender=payload.gender)
+        if payload.birth_date:
+            new_profile.set_birth_date(birth_date=payload.birth_date)
+
+        new_profile.user_account = admin_account
         session.add(instance=new_profile)
         await session.commit()
         await session.refresh(instance=new_profile)
