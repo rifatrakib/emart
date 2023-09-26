@@ -19,6 +19,8 @@ services:
       context: ./auth
     working_dir: /auth
     command: uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - OAUTHLIB_INSECURE_TRANSPORT=1
     env_file:
       - auth/.env
     volumes:
@@ -29,9 +31,10 @@ services:
     networks:
       - public_network
       - private_network
+    depends_on:
+      - emart-auth-cache
 
 volumes:
-  pgdata:
   redisdata:
   redisconfig:
 
