@@ -48,6 +48,13 @@ class BaseConfig(RootConfig):
     APP_NAME: str
     MODE: Modes
 
+    # Admin user credentials
+    ADMIN_USERNAME: str
+    ADMIN_EMAIL: EmailStr
+    ADMIN_PASSWORD: str
+    ADMIN_FIRST_NAME: str
+    ADMIN_LAST_NAME: str
+
     # SQL Database Configurations
     POSTGRES_HOST: str
     POSTGRES_PORT: str
