@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Union
 
 from pydantic import BaseModel, Field
 from server.models.schemas.base.users import UserBase
@@ -12,6 +13,11 @@ class TokenUser(UserBase):
     is_active: bool = Field(
         title="user account activation status",
         description="A boolean value to determine if user account is activated or not.",
+    )
+    provider: Union[str, None] = Field(
+        default=None,
+        title="OAuth2.0 provider",
+        decription="A string for OAuth2.0 provider as per OAuth2.0 requirements.",
     )
 
 
