@@ -1,6 +1,19 @@
 version: "3.9"
 
 services:
+  emart-auth-rds:
+    container_name: emart-auth-rds
+    image: postgres:latest
+    env_file:
+      - auth/.env.postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    restart: on-failure
+    networks:
+      - private_network
+
   emart-auth-cache:
     container_name: emart-auth-cache
     image: redis:latest
@@ -32,9 +45,11 @@ services:
       - public_network
       - private_network
     depends_on:
+      - emart-auth-rds
       - emart-auth-cache
 
 volumes:
+  pgdata:
   redisdata:
   redisconfig:
 
