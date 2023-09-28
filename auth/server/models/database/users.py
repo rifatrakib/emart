@@ -8,8 +8,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class Account(Base):
     username: Mapped[str] = mapped_column(String(length=64), nullable=False, unique=True)
-    email: Mapped[str] = mapped_column(String(length=256), nullable=False, unique=True)
-    _provider: Mapped[Provider] = mapped_column(String(length=16), nullable=True)
+    email: Mapped[str] = mapped_column(String(length=256), nullable=True, unique=True)
+    _provider: Mapped[str] = mapped_column(String(length=16), nullable=True)
     _hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=True)
     _hash_salt: Mapped[str] = mapped_column(String(length=1024), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -35,8 +35,8 @@ class Account(Base):
             return Provider.microsoft
         return None
 
-    def set_provider(self, provider: Provider) -> None:
-        self._provider = provider.value
+    def set_provider(self, provider: str) -> None:
+        self._provider = provider
 
     @property
     def hashed_password(self) -> str:
