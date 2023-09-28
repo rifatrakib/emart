@@ -26,5 +26,6 @@ class Gender(str, Enum):
 
 class Provider(str, Enum):
     google = "google"
+    github = "github"
     facebook = "facebook"
     microsoft = "microsoft"
