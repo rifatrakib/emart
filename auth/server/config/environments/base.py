@@ -91,9 +91,18 @@ class BaseConfig(RootConfig):
     PASSWORD_HASH_ALGORITHM: str
     HASH_SALT: str
 
-    # SSO Configurations
+    # SSO Configurations - Google
     GOOGLE_OAUTH_CLIENT_ID: str
     GOOGLE_OAUTH_CLIENT_SECRET: str
+
+    # SSO Configurations - GitHub
+    GITHUB_OAUTH_CLIENT_ID: str
+    GITHUB_OAUTH_CLIENT_SECRET: str
+
+    # SSO Configurations - Microsoft
+    MICROSOFT_OAUTH_CLIENT_ID: str
+    MICROSOFT_OAUTH_CLIENT_SECRET: str
+    MICROSOFT_OAUTH_TENANT: str
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
