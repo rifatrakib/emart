@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 async def read_sso_user(session: AsyncSession, payload: OpenID) -> Account:
     stmt = select(Account).where(
-        Account.email == payload.email,
+        Account.username == payload.id,
         Account._provider == payload.provider,
     )
     query = await session.execute(stmt)
@@ -22,7 +22,8 @@ async def read_sso_user(session: AsyncSession, payload: OpenID) -> Account:
 
 async def create_sso_user(session: AsyncSession, payload: OpenID) -> Account:
     try:
-        new_account = Account(username=payload.id, email=payload.email, provider=payload.provider)
+        new_account = Account(username=payload.id, email=payload.email)
+        new_account.set_provider(payload.provider)
         session.add(instance=new_account)
         await session.commit()
         await session.refresh(instance=new_account)
