@@ -1,4 +1,3 @@
-import json
 from typing import Union
 
 from aioredis.client import Redis
@@ -88,25 +87,22 @@ async def login(
             password=payload.password,
         )
 
-        token = create_jwt(
-            TokenUser(
-                id=user.id,
-                username=user.username,
-                email=user.email,
-                is_active=user.is_active,
-                provider=user.provider,
-            )
+        token_data = TokenUser(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            is_active=user.is_active,
+            provider=user.provider,
         )
+        token = create_jwt(token_data)
 
-        token_data = {"id": user.id, "username": user.username, "email": user.email, "is_active": user.is_active}
         await write_data_to_cache(
             redis,
             token,
-            json.dumps(token_data),
+            token_data.model_dump_json(),
             settings.JWT_MIN * 60,
         )
 
-        print(f"{request.base_url = }")
         if referer == request.base_url:
             response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
             response.set_cookie("auth_token", token)
