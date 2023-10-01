@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Union
 
+from aioredis.client import Redis
 from jose import JWTError, jwt
 from pydantic import ValidationError
 from server.config.factory import settings
+from server.database.cache.manager import write_data_to_cache
+from server.models.database.users import Account
 from server.models.schemas.out.auth import TokenData, TokenUser
 
 
@@ -36,3 +39,22 @@ def decode_jwt(token: str) -> TokenUser:
     except ValidationError as validation_error:
         raise ValueError("invalid payload in JWT") from validation_error
     return user_data
+
+
+async def get_jwt(redis: Redis, user: Account):
+    token_data = TokenUser(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        is_active=user.is_active,
+        provider=user.provider,
+    )
+    token = create_jwt(token_data)
+
+    await write_data_to_cache(
+        redis,
+        token,
+        token_data.model_dump_json(),
+        settings.JWT_MIN * 60,
+    )
+    return token

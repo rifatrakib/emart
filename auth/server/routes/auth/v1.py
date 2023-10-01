@@ -5,12 +5,12 @@ from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Header, HTTPExc
 from fastapi.responses import RedirectResponse
 from pydantic import EmailStr
 from server.config.factory import settings
-from server.database.cache.manager import pop_from_cache, write_data_to_cache
+from server.database.cache.manager import pop_from_cache
 from server.database.user.auth import activate_user_account, authenticate_user, create_user_account, read_user_by_email
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
-from server.models.schemas.out.auth import TokenResponseSchema, TokenUser
-from server.security.authentication.jwt import create_jwt
+from server.models.schemas.out.auth import TokenResponseSchema
+from server.security.authentication.jwt import get_jwt
 from server.security.dependencies.clients import get_database_session, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form, temporary_url_key
 from server.utils.enums import Modes, Tags, Versions
@@ -87,21 +87,7 @@ async def login(
             password=payload.password,
         )
 
-        token_data = TokenUser(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            is_active=user.is_active,
-            provider=user.provider,
-        )
-        token = create_jwt(token_data)
-
-        await write_data_to_cache(
-            redis,
-            token,
-            token_data.model_dump_json(),
-            settings.JWT_MIN * 60,
-        )
+        token = await get_jwt(redis, user)
 
         if referer == request.base_url:
             response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
