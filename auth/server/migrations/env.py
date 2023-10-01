@@ -1,4 +1,5 @@
 import asyncio
+import socket
 from logging.config import fileConfig
 
 from alembic import context
@@ -82,6 +83,20 @@ async def run_async_migrations() -> None:
 
         await connectable.dispose()
     except InvalidAuthorizationSpecificationError:
+        print("rerun with localhost...")
+        local_config = config.get_section(config.config_ini_section, {})
+        local_config["sqlalchemy.url"] = settings.RDS_URI.replace(settings.POSTGRES_HOST, "localhost")
+        connectable = async_engine_from_config(
+            local_config,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
+
+        async with connectable.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+
+        await connectable.dispose()
+    except socket.gaierror:
         print("rerun with localhost...")
         local_config = config.get_section(config.config_ini_section, {})
         local_config["sqlalchemy.url"] = settings.RDS_URI.replace(settings.POSTGRES_HOST, "localhost")
