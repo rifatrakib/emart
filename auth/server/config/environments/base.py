@@ -104,6 +104,10 @@ class BaseConfig(RootConfig):
     MICROSOFT_OAUTH_CLIENT_SECRET: str
     MICROSOFT_OAUTH_TENANT: str
 
+    # SSO Configurations - Facebook
+    FACEBOOK_OAUTH_CLIENT_ID: str
+    FACEBOOK_OAUTH_CLIENT_SECRET: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @classmethod

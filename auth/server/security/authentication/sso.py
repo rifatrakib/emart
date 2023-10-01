@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from fastapi_sso.sso.facebook import FacebookSSO
 from fastapi_sso.sso.github import GithubSSO
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.microsoft import MicrosoftSSO
@@ -25,6 +26,12 @@ class SSOClient:
             settings.GITHUB_OAUTH_CLIENT_ID,
             settings.GITHUB_OAUTH_CLIENT_SECRET,
             "http://localhost:8000/v1/sso/github/callback",
+            allow_insecure_http=True,
+        )
+        self.facebook = FacebookSSO(
+            settings.FACEBOOK_OAUTH_CLIENT_ID,
+            settings.FACEBOOK_OAUTH_CLIENT_SECRET,
+            "http://localhost:8000/v1/sso/facebook/callback",
             allow_insecure_http=True,
         )
 

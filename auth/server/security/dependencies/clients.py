@@ -34,3 +34,5 @@ async def get_sso_client(provider: Provider = Path()) -> Type[SSOBase]:
         return sso_clients.microsoft
     if provider == Provider.github:
         return sso_clients.github
+    if provider == Provider.facebook:
+        return sso_clients.facebook
