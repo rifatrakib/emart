@@ -2,7 +2,6 @@ from aioredis.client import Redis
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi_sso.sso.base import SSOBase
-from fastapi_sso.sso.github import GithubSSO
 from server.database.user.sso import create_sso_user, read_sso_user
 from server.security.authentication.jwt import get_jwt
 from server.security.dependencies.clients import get_database_session, get_redis_client, get_sso_client
@@ -28,12 +27,11 @@ async def sso_callback(
         with client:
             payload = await client.verify_and_process(request)
 
-        if isinstance(client, GithubSSO):
-            payload.id = payload.display_name
-
         user = await read_sso_user(session, payload)
-    except HTTPException:
-        user = await create_sso_user(session, payload)
+        if not user:
+            user = await create_sso_user(session, payload)
+    except HTTPException as e:
+        raise e
     finally:
         token = await get_jwt(redis, user)
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
