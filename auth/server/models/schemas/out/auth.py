@@ -14,6 +14,11 @@ class TokenUser(UserBase):
         title="user account activation status",
         description="A boolean value to determine if user account is activated or not.",
     )
+    open_id: Union[str, None] = Field(
+        default=None,
+        title="OAuth2.0 token ID",
+        decription="A string for OAuth2.0 token ID as per OAuth2.0 requirements.",
+    )
     provider: Union[str, None] = Field(
         default=None,
         title="OAuth2.0 provider",

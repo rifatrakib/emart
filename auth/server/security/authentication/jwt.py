@@ -33,6 +33,8 @@ def decode_jwt(token: str) -> TokenUser:
             username=payload.get("username"),
             email=payload.get("email"),
             is_active=payload.get("is_active"),
+            open_id=payload.get("open_id"),
+            provider=payload.get("provider"),
         )
     except JWTError as token_decode_error:
         raise ValueError("unable to decode JWT") from token_decode_error
@@ -47,6 +49,7 @@ async def get_jwt(redis: Redis, user: Account):
         username=user.username,
         email=user.email,
         is_active=user.is_active,
+        open_id=user.open_id,
         provider=user.provider,
     )
     token = create_jwt(token_data)
