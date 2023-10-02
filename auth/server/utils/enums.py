@@ -3,6 +3,8 @@ from enum import Enum
 
 class Tags(str, Enum):
     authentication = "Authentication"
+    sso = "SSO"
+    account = "Account"
     profile = "Profile"
 
 
@@ -20,3 +22,10 @@ class Modes(str, Enum):
 class Gender(str, Enum):
     male = "m"
     female = "f"
+
+
+class Provider(str, Enum):
+    google = "google"
+    github = "github"
+    facebook = "facebook"
+    microsoft = "microsoft"

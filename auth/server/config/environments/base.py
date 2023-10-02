@@ -48,6 +48,13 @@ class BaseConfig(RootConfig):
     APP_NAME: str
     MODE: Modes
 
+    # Admin user credentials
+    ADMIN_USERNAME: str
+    ADMIN_EMAIL: EmailStr
+    ADMIN_PASSWORD: str
+    ADMIN_FIRST_NAME: str
+    ADMIN_LAST_NAME: str
+
     # SQL Database Configurations
     POSTGRES_HOST: str
     POSTGRES_PORT: str
@@ -83,6 +90,23 @@ class BaseConfig(RootConfig):
     SALT_HASH_ALGORITHM: str
     PASSWORD_HASH_ALGORITHM: str
     HASH_SALT: str
+
+    # SSO Configurations - Google
+    GOOGLE_OAUTH_CLIENT_ID: str
+    GOOGLE_OAUTH_CLIENT_SECRET: str
+
+    # SSO Configurations - GitHub
+    GITHUB_OAUTH_CLIENT_ID: str
+    GITHUB_OAUTH_CLIENT_SECRET: str
+
+    # SSO Configurations - Microsoft
+    MICROSOFT_OAUTH_CLIENT_ID: str
+    MICROSOFT_OAUTH_CLIENT_SECRET: str
+    MICROSOFT_OAUTH_TENANT: str
+
+    # SSO Configurations - Facebook
+    FACEBOOK_OAUTH_CLIENT_ID: str
+    FACEBOOK_OAUTH_CLIENT_SECRET: str
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

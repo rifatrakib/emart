@@ -2,11 +2,11 @@ from functools import lru_cache
 from typing import Any, Dict, List
 
 from fastapi import Request
-from fastapi.templating import Jinja2Templates
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import EmailStr, HttpUrl
 from server.config.factory import settings
 from server.models.database.users import Account
+from server.utils.html import build_mail_body
 
 
 @lru_cache()
@@ -22,20 +22,6 @@ def config_smtp_server() -> ConnectionConfig:
         MAIL_SSL_TLS=settings.MAIL_SSL_TLS,
         USE_CREDENTIALS=settings.USE_CREDENTIALS,
     )
-
-
-@lru_cache()
-def config_templates() -> Jinja2Templates:
-    return Jinja2Templates(directory="server/templates")
-
-
-def build_mail_body(context: Dict[str, Any], template_name: str) -> str:
-    template_server: Jinja2Templates = config_templates()
-    template = template_server.TemplateResponse(
-        name=template_name,
-        context=context,
-    )
-    return template.body.decode("utf-8")
 
 
 def prepare_message(

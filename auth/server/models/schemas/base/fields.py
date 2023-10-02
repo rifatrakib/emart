@@ -8,9 +8,9 @@ def username_field() -> Dict[str, Any]:
             Unique username containing letters, numbers, and
             any of (., _, -, @) in between 6 to 32 characters.
         """.replace("\n", " ").strip(),
-        pattern=r"^[\w.@_-]{6,32}$",
-        min_length=6,
-        max_length=32,
+        pattern=r"^[\w.@_-]{5,64}$",
+        min_length=5,
+        max_length=64,
         example="superadmin",
     )
 

@@ -8,8 +8,8 @@ from server.utils.enums import Gender
 
 
 class UserBase(BaseAPISchema):
-    username: str = Field(**username_field())
-    email: EmailStr = Field(**email_field())
+    username: Union[str, None] = Field(default=None, **username_field())
+    email: Union[EmailStr, None] = Field(default=None, **email_field())
 
 
 class ProfileBase(BaseAPISchema):

@@ -1,18 +1,21 @@
 from datetime import date
 
 from server.models.database import Base
-from server.utils.enums import Gender
+from server.utils.enums import Gender, Provider
 from sqlalchemy import Boolean, Date, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class Account(Base):
-    username: Mapped[str] = mapped_column(String(length=64), nullable=False, unique=True)
-    email: Mapped[str] = mapped_column(String(length=256), nullable=False, unique=True)
+    username: Mapped[str] = mapped_column(String(length=64), nullable=True, unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(length=256), nullable=True, unique=True, index=True)
+    open_id: Mapped[str] = mapped_column(String(length=256), nullable=True, unique=True, index=True)
+    _provider: Mapped[str] = mapped_column(String(length=16), nullable=True, index=True)
     _hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=True)
     _hash_salt: Mapped[str] = mapped_column(String(length=1024), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     user_profile: Mapped["Profile"] = relationship(
         "Profile",
@@ -22,6 +25,19 @@ class Account(Base):
 
     def __repr__(self) -> str:
         return f"<Account(username={self.username}, email={self.email}>"
+
+    @property
+    def provider(self) -> Provider:
+        if self._provider == Provider.google:
+            return Provider.google
+        elif self._provider == Provider.facebook:
+            return Provider.facebook
+        elif self._provider == Provider.microsoft:
+            return Provider.microsoft
+        return None
+
+    def set_provider(self, provider: str) -> None:
+        self._provider = provider
 
     @property
     def hashed_password(self) -> str:
@@ -45,7 +61,7 @@ class Profile(Base):
     _birth_date: Mapped[date] = mapped_column(Date, nullable=True)
     address: Mapped[str] = mapped_column(String(length=1024), nullable=True)
     _gender: Mapped[str] = mapped_column(String(length=1), nullable=True)
-    account_id: Mapped[int] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"), nullable=False)
+    account_id: Mapped[int] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"), nullable=False, index=True)
 
     user_account: Mapped["Account"] = relationship(
         Account,
@@ -72,9 +88,9 @@ class Profile(Base):
 
     @property
     def gender(self) -> Gender:
-        if self._gender == "m":
+        if self._gender == Gender.male:
             return Gender.male
-        elif self._gender == "f":
+        elif self._gender == Gender.female:
             return Gender.female
 
     def set_gender(self, gender: Gender) -> None:

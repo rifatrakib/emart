@@ -1,7 +1,9 @@
 import asyncio
+import socket
 from logging.config import fileConfig
 
 from alembic import context
+from asyncpg.exceptions import InvalidAuthorizationSpecificationError
 from server.config.factory import settings
 from server.models.database.users import Account
 from sqlalchemy import pool
@@ -69,16 +71,45 @@ async def run_async_migrations() -> None:
     """In this scenario we need to create an Engine and associate a connection
     with the context."""
 
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    try:
+        connectable = async_engine_from_config(
+            config.get_section(config.config_ini_section, {}),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
 
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+        async with connectable.connect() as connection:
+            await connection.run_sync(do_run_migrations)
 
-    await connectable.dispose()
+        await connectable.dispose()
+    except InvalidAuthorizationSpecificationError:
+        print("rerun with localhost...")
+        local_config = config.get_section(config.config_ini_section, {})
+        local_config["sqlalchemy.url"] = settings.RDS_URI.replace(settings.POSTGRES_HOST, "localhost")
+        connectable = async_engine_from_config(
+            local_config,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
+
+        async with connectable.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+
+        await connectable.dispose()
+    except socket.gaierror:
+        print("rerun with localhost...")
+        local_config = config.get_section(config.config_ini_section, {})
+        local_config["sqlalchemy.url"] = settings.RDS_URI.replace(settings.POSTGRES_HOST, "localhost")
+        connectable = async_engine_from_config(
+            local_config,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
+
+        async with connectable.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+
+        await connectable.dispose()
 
 
 def run_migrations_online() -> None:

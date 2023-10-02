@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Home page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        form {
+            width: 60%;
+            margin: 0 auto;
+        }
+
+
+        input[type=text],
+        input[type=password] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+        }
+
+        button {
+            background-color: #27a9e1;
+            color: white;
+            padding: 15px;
+            margin: 10px 0px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            vertical-align: bottom;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .outter {
+            padding: 16px;
+            width: 50%;
+            margin-left: 25%
+        }
+
+        .sso {
+            display: flex;
+            margin-top: 2%;
+            margin: 2% auto;
+        }
+
+        .login-btn {
+            border-radius: 3px;
+        }
+
+        .logout {
+            float: right;
+            margin-top: 1%;
+            margin-bottom: 1%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="row">
+        <div class="outter">
+            {% if user %}
+            <p class="col-lg-2"><i class="fa-regular fa-user">Welcome</i>, {{user.username}}</p>
+            <p>Visit the API documentation <a href="/docs">here</a></p>
+
+            <div>
+                <form class="col-lg-2 logout" method="post" action="/v1/auth/logout">
+                    <button class="fa-solid fa-right-from-bracket" type="submit">Logout</button>
+                </form>
+            </div>
+            {% else %}
+            <form action="v1/auth/login" method="post">
+                <label for="username"><b>Username</b></label>
+                <input type="text" placeholder="Enter Username" name="username" required>
+
+                <label for="password"><b>Password</b></label>
+                <input type="password" placeholder="Enter Password" name="password" required>
+
+                <button type="submit">Login</button>
+            </form>
+            <div class="sso col-lg-8">
+                <form class="col-lg-3" method="get" action="/v1/sso/google" style="text-align: center;">
+                    <button class="login-btn" type="submit">
+                        <i class="fa-brands fa-google"></i>
+                    </button>
+                </form>
+                <form class="col-lg-3" method="get" action="/v1/sso/github" style="text-align: center;">
+                    <button class="login-btn" type="submit">
+                        <i class="fa-brands fa-github"> </i>
+                    </button>
+                </form>
+                <form class="col-lg-3" method="get" action="/v1/sso/facebook" style="text-align: center;">
+                    <button class="login-btn" type="submit">
+                        <i class="fa-brands fa-facebook"></i>
+                    </button>
+                </form>
+                <form class="col-lg-3" method="get" action="/v1/sso/microsoft" style="text-align: center;">
+                    <button class="login-btn" type="submit">
+                        <i class="fa-brands fa-microsoft"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>
