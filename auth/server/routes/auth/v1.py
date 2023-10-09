@@ -3,12 +3,13 @@ from typing import Union
 from aioredis.client import Redis
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Header, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from server.config.factory import settings
 from server.database.cache.manager import pop_from_cache
 from server.database.user.auth import activate_user_account, authenticate_user, create_user_account, read_user_by_email
 from server.models.schemas.base import MessageResponseSchema
-from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
+from server.models.schemas.inc.auth import SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema
 from server.security.authentication.jwt import get_jwt
 from server.security.dependencies.clients import get_database_session, get_redis_client
@@ -77,7 +78,7 @@ async def login(
     request: Request,
     referer: Union[str, None] = Header(default=None),
     redis: Redis = Depends(get_redis_client),
-    payload: LoginRequestSchema = Depends(login_form),
+    payload: OAuth2PasswordRequestForm = Depends(login_form),
     session: AsyncSession = Depends(get_database_session),
 ) -> TokenResponseSchema:
     try:

@@ -4,13 +4,10 @@ from server.utils.exceptions import raise_422_unprocessable_entity
 from server.utils.helper import validate_password
 
 
-class LoginRequestSchema(BaseRequestSchema):
+class SignupRequestSchema(BaseRequestSchema):
     username: str
-    password: str
-
-
-class SignupRequestSchema(LoginRequestSchema):
     email: EmailStr
+    password: str
 
     @validator("password", pre=True)
     def validate_password_pattern(cls, v) -> str:
