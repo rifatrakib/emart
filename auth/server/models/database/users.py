@@ -102,3 +102,22 @@ class Profile(Base):
 
     def set_birth_date(self, birth_date: str) -> None:
         self._birth_date = birth_date
+
+
+class RefreshToken(Base):
+    refresh_token: Mapped[str] = mapped_column(String(length=1024), nullable=False, unique=True)
+    access_token: Mapped[str] = mapped_column(String(length=1024), nullable=False, index=True, unique=True)
+
+    account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), nullable=False, index=True)
+
+    account: Mapped[Account] = relationship(
+        Account,
+        back_populates="tokens",
+        uselist=False,
+        primaryjoin="RefreshToken.account_id == Account.id",
+        lazy="joined",
+        innerjoin=True,
+    )
+
+    def __repr__(self) -> str:
+        return f"<RefreshToken(account_id={self.account_id}>"
