@@ -29,3 +29,13 @@ class Provider(str, Enum):
     github = "github"
     facebook = "facebook"
     microsoft = "microsoft"
+
+
+class TimeUnits(str, Enum):
+    seconds = "seconds"
+    minutes = "minutes"
+    hours = "hours"
+    days = "days"
+    weeks = "weeks"
+    months = "months"
+    years = "years"
