@@ -22,6 +22,11 @@ class Account(Base):
         back_populates="user_account",
         uselist=False,
     )
+    tokens: Mapped["RefreshToken"] = relationship(
+        "RefreshToken",
+        back_populates="account",
+        uselist=True,
+    )
 
     def __repr__(self) -> str:
         return f"<Account(username={self.username}, email={self.email}>"
