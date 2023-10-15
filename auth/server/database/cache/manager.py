@@ -16,6 +16,14 @@ async def read_from_cache(client: Redis, key: str) -> str:
         raise_410_gone("Token expired")
 
 
+async def read_token_from_cache(client: Redis, key: str) -> str:
+    try:
+        data = await client.get(key)
+        return data
+    except TypeError:
+        raise_410_gone("Token expired")
+
+
 async def pop_from_cache(client: Redis, key: str) -> str:
     try:
         data = await client.get(key)
