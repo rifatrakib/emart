@@ -33,7 +33,7 @@ async def sso_callback(
     except HTTPException as e:
         raise e
     finally:
-        token = await get_jwt(redis, user)
+        tokens = await get_jwt(redis, user)
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-        response.set_cookie("auth_token", token)
+        response.set_cookie("auth_token", tokens.access_token)
         return response

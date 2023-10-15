@@ -88,14 +88,14 @@ async def login(
             password=payload.password,
         )
 
-        token = await get_jwt(redis, user)
+        tokens = await get_jwt(redis, user)
 
         if referer == request.base_url:
             response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-            response.set_cookie("auth_token", token)
+            response.set_cookie("auth_token", tokens.access_token)
             return response
 
-        return {"access_token": token, "token_type": "Bearer"}
+        return {"access_token": tokens.access_token, "token_type": "Bearer"}
     except HTTPException as e:
         raise e
 
