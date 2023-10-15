@@ -46,3 +46,8 @@ class TokenResponseSchema(BaseModel):
         title="token type",
         decription="A string for token type as per OAuth2.0 requirements.",
     )
+
+
+class TokenCollectionSchema(BaseModel):
+    access_token: str
+    refresh_token: str
