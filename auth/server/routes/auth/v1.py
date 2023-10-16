@@ -6,12 +6,13 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from server.config.factory import settings
-from server.database.cache.manager import pop_from_cache
+from server.database.cache.manager import pop_from_cache, write_data_to_cache
 from server.database.user.auth import activate_user_account, authenticate_user, create_user_account, read_user_by_email
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema
-from server.security.authentication.jwt import get_jwt
+from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt
+from server.security.dependencies.acl import get_refresh_token
 from server.security.dependencies.clients import get_database_session, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form, temporary_url_key
 from server.utils.enums import Modes, Tags, Versions
@@ -96,6 +97,29 @@ async def login(
             return response
 
         return {"access_token": tokens.access_token, "token_type": "Bearer"}
+    except HTTPException as e:
+        raise e
+
+
+@router.post(
+    "/refresh",
+    summary="Refresh access token",
+    description="Refresh access token.",
+    response_model=TokenResponseSchema,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def refresh(
+    redis: Redis = Depends(get_redis_client),
+    refresh_token: str = Depends(get_refresh_token),
+):
+    try:
+        user = decode_refresh_token(refresh_token)
+        new_access_token = create_access_token(user)
+
+        await write_data_to_cache(redis, new_access_token, refresh_token)
+        return {"access_token": new_access_token, "token_type": "Bearer"}
+    except ValueError:
+        raise_401_unauthorized("Please log in again.")
     except HTTPException as e:
         raise e
 
