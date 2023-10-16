@@ -39,7 +39,8 @@ def decode_access_token(token: str) -> TokenUser:
             key=settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
         )
-        user_data = TokenUser(
+
+        return TokenUser(
             id=payload.get("id"),
             username=payload.get("username"),
             email=payload.get("email"),
@@ -47,11 +48,32 @@ def decode_access_token(token: str) -> TokenUser:
             open_id=payload.get("open_id"),
             provider=payload.get("provider"),
         )
-    except JWTError as token_decode_error:
-        raise ValueError("unable to decode JWT") from token_decode_error
-    except ValidationError as validation_error:
-        raise ValueError("invalid payload in JWT") from validation_error
-    return user_data
+    except JWTError:
+        raise ValueError("unable to decode JWT")
+    except ValidationError:
+        raise ValueError("invalid payload in JWT")
+
+
+def decode_refresh_token(token: str) -> TokenUser:
+    try:
+        payload = jwt.decode(
+            token=token,
+            key=settings.REFRESH_TOKEN_SECRET_KEY,
+            algorithms=[settings.REFRESH_TOKEN_ALGORITHM],
+        )
+
+        return TokenUser(
+            id=payload.get("id"),
+            username=payload.get("username"),
+            email=payload.get("email"),
+            is_active=payload.get("is_active"),
+            open_id=payload.get("open_id"),
+            provider=payload.get("provider"),
+        )
+    except JWTError:
+        raise ValueError("unable to decode JWT")
+    except ValidationError:
+        raise ValueError("invalid payload in JWT")
 
 
 async def get_jwt(redis: Redis, user: Account) -> TokenCollectionSchema:
@@ -66,10 +88,5 @@ async def get_jwt(redis: Redis, user: Account) -> TokenCollectionSchema:
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
-    await write_data_to_cache(
-        redis,
-        access_token,
-        refresh_token,
-        settings.JWT_MIN * 60,
-    )
+    await write_data_to_cache(redis, access_token, refresh_token)
     return TokenCollectionSchema(access_token=access_token, refresh_token=refresh_token)

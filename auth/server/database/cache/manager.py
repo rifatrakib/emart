@@ -1,10 +1,16 @@
 import json
+from typing import Union
 
 from aioredis.client import Redis
 from server.utils.exceptions import raise_410_gone
 
 
-async def write_data_to_cache(client: Redis, key: str, data: str, expire: int = 3600) -> None:
+async def write_data_to_cache(
+    client: Redis,
+    key: str,
+    data: str,
+    expire: Union[int, None] = None,
+) -> None:
     await client.set(key, data, ex=expire)
 
 
