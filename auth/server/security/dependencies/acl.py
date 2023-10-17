@@ -14,9 +14,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
 
 
+async def get_access_token(token: str = Depends(oauth2_scheme)) -> str:
+    return token
+
+
 async def get_refresh_token(
     redis: Redis = Depends(get_redis_client),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_access_token),
 ) -> str:
     try:
         refresh_token = await read_token_from_cache(redis, token)
