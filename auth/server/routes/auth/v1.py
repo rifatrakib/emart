@@ -12,6 +12,7 @@ from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema
 from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt
+from server.security.authentication.token import store_tokens, update_tokens
 from server.security.dependencies.acl import get_refresh_token
 from server.security.dependencies.clients import get_database_session, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form, temporary_url_key
@@ -77,6 +78,7 @@ async def register(
 )
 async def login(
     request: Request,
+    task_queue: BackgroundTasks,
     referer: Union[str, None] = Header(default=None),
     redis: Redis = Depends(get_redis_client),
     payload: OAuth2PasswordRequestForm = Depends(login_form),
@@ -96,6 +98,7 @@ async def login(
             response.set_cookie("auth_token", tokens.access_token)
             return response
 
+        task_queue.add_task(store_tokens, tokens, user)
         return {"access_token": tokens.access_token, "token_type": "Bearer"}
     except HTTPException as e:
         raise e
@@ -109,6 +112,7 @@ async def login(
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def refresh(
+    task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
     refresh_token: str = Depends(get_refresh_token),
 ):
@@ -117,6 +121,8 @@ async def refresh(
         new_access_token = create_access_token(user)
 
         await write_data_to_cache(redis, new_access_token, refresh_token)
+        task_queue.add_task(update_tokens, new_access_token, refresh_token)
+
         return {"access_token": new_access_token, "token_type": "Bearer"}
     except ValueError:
         raise_401_unauthorized("Please log in again.")

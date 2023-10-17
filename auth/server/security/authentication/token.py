@@ -1,14 +1,19 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from aioredis.client import Redis
+from fastapi import HTTPException
 from jose import JWTError, jwt
 from pydantic import ValidationError
 from server.config.factory import settings
-from server.database.cache.manager import write_data_to_cache
+from server.database.cache.manager import read_token_from_cache, write_data_to_cache
+from server.database.token.crud import write_tokens
+from server.models.database import get_async_database_session
 from server.models.database.users import Account
 from server.models.schemas.out.auth import TokenCollectionSchema, TokenUser
 from server.utils.enums import TimeUnits
+from server.utils.exceptions import raise_401_unauthorized
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class JWTGenerator:
@@ -38,6 +43,16 @@ class JWTGenerator:
 
         self.access_token_expiry = datetime.utcnow() + access_token_expiry
         self.refresh_token_expiry = datetime.utcnow() + refresh_token_expiry
+
+    async def get_refresh_token(self, redis: Redis, token: str) -> str:
+        try:
+            refresh_token = await read_token_from_cache(redis, token)
+            if not refresh_token:
+                raise_401_unauthorized("Please log in again.")
+
+            return refresh_token
+        except HTTPException:
+            raise_401_unauthorized("Please log in again.")
 
     def create_access_token(self, data: TokenUser) -> str:
         return jwt.encode(
@@ -86,8 +101,9 @@ class JWTGenerator:
 
     def decode_refresh_token(self, token: str) -> TokenUser:
         try:
+            refresh_token = self.get_refresh_token(token)
             payload = jwt.decode(
-                token=token,
+                token=refresh_token,
                 key=self.refresh_token_secret_key,
                 algorithms=[self.refresh_token_algorithm],
             )
@@ -96,8 +112,10 @@ class JWTGenerator:
             raise ValueError("unable to decode JWT")
         except ValidationError:
             raise ValueError("invalid payload in JWT")
+        except HTTPException as e:
+            raise e
 
-    async def generate_jwt(self, redis: Redis, user: Account) -> TokenCollectionSchema:
+    async def generate(self, redis: Redis, user: Union[Account, TokenUser]) -> TokenCollectionSchema:
         token_data = TokenUser(
             id=user.id,
             username=user.username,
@@ -115,3 +133,9 @@ class JWTGenerator:
             access_token=access_token,
             refresh_token=refresh_token,
         )
+
+
+async def store_tokens(tokens: TokenCollectionSchema, user: Union[Account, TokenUser]):
+    session: AsyncSession = get_async_database_session()
+    await write_tokens(session, user.id, tokens)
+    await session.close()
