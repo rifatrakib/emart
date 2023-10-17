@@ -40,6 +40,10 @@ async def pop_from_cache(client: Redis, key: str) -> str:
         raise_410_gone("Token expired")
 
 
+async def remove_from_cache(client: Redis, key: str) -> None:
+    await client.delete(key)
+
+
 async def validate_key(client: Redis, key: str) -> bool:
     status = await client.exists(key)
     if not status:
