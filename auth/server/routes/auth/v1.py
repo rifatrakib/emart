@@ -11,9 +11,9 @@ from server.database.user.auth import activate_user_account, authenticate_user, 
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema
-from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt
+from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt, get_refresh_token
 from server.security.authentication.token import store_tokens, update_tokens
-from server.security.dependencies.acl import get_refresh_token
+from server.security.dependencies.acl import get_access_token
 from server.security.dependencies.clients import get_database_session, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form, temporary_url_key
 from server.utils.enums import Modes, Tags, Versions
@@ -92,13 +92,13 @@ async def login(
         )
 
         tokens = await get_jwt(redis, user)
+        task_queue.add_task(store_tokens, tokens, user)
 
         if referer == request.base_url:
             response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
             response.set_cookie("auth_token", tokens.access_token)
             return response
 
-        task_queue.add_task(store_tokens, tokens, user)
         return {"access_token": tokens.access_token, "token_type": "Bearer"}
     except HTTPException as e:
         raise e
@@ -114,14 +114,15 @@ async def login(
 async def refresh(
     task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
-    refresh_token: str = Depends(get_refresh_token),
+    access_token: str = Depends(get_access_token),
 ):
     try:
+        refresh_token = await get_refresh_token(redis, access_token)
         user = decode_refresh_token(refresh_token)
         new_access_token = create_access_token(user)
 
         await write_data_to_cache(redis, new_access_token, refresh_token)
-        task_queue.add_task(update_tokens, new_access_token, refresh_token)
+        task_queue.add_task(update_tokens, access_token, new_access_token, refresh_token)
 
         return {"access_token": new_access_token, "token_type": "Bearer"}
     except ValueError:
