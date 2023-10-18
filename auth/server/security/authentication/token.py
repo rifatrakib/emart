@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta
+from functools import lru_cache
 from typing import Any, Dict, Union
 
+import aioredis
 from aioredis.client import Redis
 from fastapi import HTTPException
 from jose import JWTError, jwt
 from pydantic import ValidationError
 from server.config.factory import settings
-from server.database.cache.manager import read_token_from_cache, write_data_to_cache
-from server.database.token.crud import write_tokens
+from server.database.cache.manager import read_token_from_cache, remove_from_cache, write_data_to_cache
+from server.database.token.crud import remove_token, update_access_token, write_tokens
 from server.models.database import get_async_database_session
 from server.models.database.users import Account
 from server.models.schemas.out.auth import TokenCollectionSchema, TokenUser
@@ -32,14 +34,14 @@ class JWTGenerator:
 
         # time units
         if unit == TimeUnits.days:
-            access_token_expiry = timedelta(seconds=settings.JWT_DAY)
-            refresh_token_expiry = timedelta(seconds=settings.REFRESH_TOKEN_DAY)
+            access_token_expiry = timedelta(days=settings.JWT_DAY)
+            refresh_token_expiry = timedelta(days=settings.REFRESH_TOKEN_DAY)
         elif unit == TimeUnits.hours:
-            access_token_expiry = timedelta(seconds=settings.JWT_HOUR)
-            refresh_token_expiry = timedelta(seconds=settings.REFRESH_TOKEN_HOUR)
+            access_token_expiry = timedelta(hours=settings.JWT_HOUR)
+            refresh_token_expiry = timedelta(hours=settings.REFRESH_TOKEN_HOUR)
         else:
-            access_token_expiry = timedelta(seconds=settings.JWT_MIN)
-            refresh_token_expiry = timedelta(seconds=settings.REFRESH_TOKEN_MIN)
+            access_token_expiry = timedelta(minutes=settings.JWT_MIN)
+            refresh_token_expiry = timedelta(minutes=settings.REFRESH_TOKEN_MIN)
 
         self.access_token_expiry = datetime.utcnow() + access_token_expiry
         self.refresh_token_expiry = datetime.utcnow() + refresh_token_expiry
@@ -101,9 +103,8 @@ class JWTGenerator:
 
     def decode_refresh_token(self, token: str) -> TokenUser:
         try:
-            refresh_token = self.get_refresh_token(token)
             payload = jwt.decode(
-                token=refresh_token,
+                token=token,
                 key=self.refresh_token_secret_key,
                 algorithms=[self.refresh_token_algorithm],
             )
@@ -139,3 +140,31 @@ async def store_tokens(tokens: TokenCollectionSchema, user: Union[Account, Token
     session: AsyncSession = get_async_database_session()
     await write_tokens(session, user.id, tokens)
     await session.close()
+
+
+async def update_tokens(old_access_token: str, new_access_token: str, refresh_token: str):
+    session: AsyncSession = get_async_database_session()
+    await update_access_token(session, old_access_token, new_access_token)
+    await session.close()
+
+    redis = await aioredis.from_url(settings.REDIS_URI, decode_responses=True)
+    await remove_from_cache(redis, old_access_token)
+    await redis.close()
+
+
+async def cleanup_tokens(access_token: str):
+    session: AsyncSession = get_async_database_session()
+    await remove_token(session, access_token)
+    await session.close()
+
+    redis = await aioredis.from_url(settings.REDIS_URI, decode_responses=True)
+    await remove_from_cache(redis, access_token)
+    await redis.close()
+
+
+@lru_cache()
+def get_jwt_generator(unit: TimeUnits) -> JWTGenerator:
+    return JWTGenerator(unit)
+
+
+jwt_generator: JWTGenerator = get_jwt_generator(TimeUnits.minutes)
