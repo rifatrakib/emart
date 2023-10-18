@@ -2,12 +2,14 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from aioredis.client import Redis
+from fastapi import HTTPException
 from jose import JWTError, jwt
 from pydantic import ValidationError
 from server.config.factory import settings
-from server.database.cache.manager import write_data_to_cache
+from server.database.cache.manager import read_token_from_cache, write_data_to_cache
 from server.models.database.users import Account
 from server.models.schemas.out.auth import TokenCollectionSchema, TokenData, TokenUser
+from server.utils.exceptions import raise_401_unauthorized
 
 
 def create_access_token(data: TokenUser, expires_delta: Union[datetime, None] = None) -> str:
@@ -30,6 +32,17 @@ def create_refresh_token(data: TokenUser, expires_delta: Union[datetime, None] =
         key=settings.REFRESH_TOKEN_SECRET_KEY,
         algorithm=settings.REFRESH_TOKEN_ALGORITHM,
     )
+
+
+async def get_refresh_token(redis: Redis, token: str) -> str:
+    try:
+        refresh_token = await read_token_from_cache(redis, token)
+        if not refresh_token:
+            raise_401_unauthorized("Please log in again.")
+
+        return refresh_token
+    except HTTPException:
+        raise_401_unauthorized("Please log in again.")
 
 
 def decode_access_token(token: str) -> TokenUser:
