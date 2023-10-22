@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from server.config.factory import settings
-from server.database.cache.manager import pop_from_cache, write_data_to_cache
+from server.database.cache.manager import pop_from_cache, remove_from_cache, write_data_to_cache
 from server.database.user.auth import activate_user_account, authenticate_user, create_user_account, read_user_by_email
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import SignupRequestSchema
@@ -149,10 +149,10 @@ async def logout(
 
         if authorization:
             token = authorization.split(" ")[1]
-            await pop_from_cache(redis, token)
+            await remove_from_cache(redis, token)
             task_queue.add_task(cleanup_tokens, token)
         if auth_token:
-            await pop_from_cache(redis, auth_token)
+            await remove_from_cache(redis, auth_token)
             task_queue.add_task(cleanup_tokens, auth_token)
 
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
