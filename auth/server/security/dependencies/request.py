@@ -1,7 +1,8 @@
 from fastapi import Depends, Form, Query
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from server.models.schemas.base.fields import email_field, password_field, username_field
-from server.models.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
+from server.models.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
 from server.utils.exceptions import raise_422_unprocessable_entity
 
 
@@ -66,11 +67,8 @@ def signup_form(
     return SignupRequestSchema(username=username, email=email, password=password)
 
 
-def login_form(
-    username: str = Depends(username_form_field),
-    password: str = Depends(password_form_field),
-) -> LoginRequestSchema:
-    return LoginRequestSchema(username=username, password=password)
+def login_form(payload: OAuth2PasswordRequestForm = Depends()) -> OAuth2PasswordRequestForm:
+    return payload
 
 
 def password_change_form(

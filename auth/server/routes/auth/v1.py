@@ -3,14 +3,17 @@ from typing import Union
 from aioredis.client import Redis
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Header, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from server.config.factory import settings
-from server.database.cache.manager import pop_from_cache
+from server.database.cache.manager import pop_from_cache, remove_from_cache, write_data_to_cache
 from server.database.user.auth import activate_user_account, authenticate_user, create_user_account, read_user_by_email
 from server.models.schemas.base import MessageResponseSchema
-from server.models.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
+from server.models.schemas.inc.auth import SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema
-from server.security.authentication.jwt import get_jwt
+from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt, get_refresh_token
+from server.security.authentication.token import cleanup_tokens, store_tokens, update_tokens
+from server.security.dependencies.acl import get_access_token
 from server.security.dependencies.clients import get_database_session, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form, temporary_url_key
 from server.utils.enums import Modes, Tags, Versions
@@ -75,9 +78,10 @@ async def register(
 )
 async def login(
     request: Request,
+    task_queue: BackgroundTasks,
     referer: Union[str, None] = Header(default=None),
     redis: Redis = Depends(get_redis_client),
-    payload: LoginRequestSchema = Depends(login_form),
+    payload: OAuth2PasswordRequestForm = Depends(login_form),
     session: AsyncSession = Depends(get_database_session),
 ) -> TokenResponseSchema:
     try:
@@ -87,14 +91,43 @@ async def login(
             password=payload.password,
         )
 
-        token = await get_jwt(redis, user)
+        tokens = await get_jwt(redis, user)
+        task_queue.add_task(store_tokens, tokens, user)
 
         if referer == request.base_url:
             response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-            response.set_cookie("auth_token", token)
+            response.set_cookie("auth_token", tokens.access_token)
             return response
 
-        return {"access_token": token, "token_type": "Bearer"}
+        return {"access_token": tokens.access_token, "token_type": "Bearer"}
+    except HTTPException as e:
+        raise e
+
+
+@router.post(
+    "/refresh",
+    summary="Refresh access token",
+    description="Refresh access token.",
+    response_model=TokenResponseSchema,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def refresh(
+    task_queue: BackgroundTasks,
+    redis: Redis = Depends(get_redis_client),
+    access_token: str = Depends(get_access_token),
+):
+    try:
+        refresh_token = await get_refresh_token(redis, access_token)
+        user = decode_refresh_token(refresh_token)
+        new_access_token = create_access_token(user)
+
+        await write_data_to_cache(redis, new_access_token, refresh_token)
+        task_queue.add_task(update_tokens, access_token, new_access_token, refresh_token)
+
+        return {"access_token": new_access_token, "token_type": "Bearer"}
+    except ValueError:
+        task_queue.add_task(cleanup_tokens, access_token)
+        raise_401_unauthorized("Please log in again.")
     except HTTPException as e:
         raise e
 
@@ -105,6 +138,7 @@ async def login(
     description="Logout a user account.",
 )
 async def logout(
+    task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
     authorization: Union[str, None] = Header(default=None),
     auth_token: Union[str, None] = Cookie(default=None),
@@ -114,9 +148,12 @@ async def logout(
             raise_401_unauthorized("Not authenticated")
 
         if authorization:
-            await pop_from_cache(redis, authorization.split(" ")[1])
+            token = authorization.split(" ")[1]
+            await remove_from_cache(redis, token)
+            task_queue.add_task(cleanup_tokens, token)
         if auth_token:
-            await pop_from_cache(redis, auth_token)
+            await remove_from_cache(redis, auth_token)
+            task_queue.add_task(cleanup_tokens, auth_token)
 
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
         response.delete_cookie("auth_token")

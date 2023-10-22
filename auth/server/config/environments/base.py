@@ -86,6 +86,14 @@ class BaseConfig(RootConfig):
     JWT_HOUR: int
     JWT_DAY: int
 
+    # Refresh Token Configurations
+    REFRESH_TOKEN_SECRET_KEY: str
+    REFRESH_TOKEN_SUBJECT: str
+    REFRESH_TOKEN_ALGORITHM: str
+    REFRESH_TOKEN_MIN: int
+    REFRESH_TOKEN_HOUR: int
+    REFRESH_TOKEN_DAY: int
+
     # Hash Configurations
     SALT_HASH_ALGORITHM: str
     PASSWORD_HASH_ALGORITHM: str

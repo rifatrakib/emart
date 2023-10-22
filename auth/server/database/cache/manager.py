@@ -1,10 +1,16 @@
 import json
+from typing import Union
 
 from aioredis.client import Redis
 from server.utils.exceptions import raise_410_gone
 
 
-async def write_data_to_cache(client: Redis, key: str, data: str, expire: int = 3600) -> None:
+async def write_data_to_cache(
+    client: Redis,
+    key: str,
+    data: str,
+    expire: Union[int, None] = None,
+) -> None:
     await client.set(key, data, ex=expire)
 
 
@@ -12,6 +18,14 @@ async def read_from_cache(client: Redis, key: str) -> str:
     try:
         data = await client.get(key)
         return json.loads(data)
+    except TypeError:
+        raise_410_gone("Token expired")
+
+
+async def read_token_from_cache(client: Redis, key: str) -> str:
+    try:
+        data = await client.get(key)
+        return data
     except TypeError:
         raise_410_gone("Token expired")
 
@@ -24,6 +38,10 @@ async def pop_from_cache(client: Redis, key: str) -> str:
         return data
     except TypeError:
         raise_410_gone("Token expired")
+
+
+async def remove_from_cache(client: Redis, key: str) -> None:
+    await client.delete(key)
 
 
 async def validate_key(client: Redis, key: str) -> bool:
