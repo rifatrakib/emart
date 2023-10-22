@@ -1,9 +1,10 @@
 from aioredis.client import Redis
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi_sso.sso.base import SSOBase
 from server.database.user.sso import create_sso_user, read_sso_user
 from server.security.authentication.jwt import get_jwt
+from server.security.authentication.token import store_tokens
 from server.security.dependencies.clients import get_database_session, get_redis_client, get_sso_client
 from server.utils.enums import Tags, Versions
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +20,7 @@ async def sso_login(client: SSOBase = Depends(get_sso_client)):
 @router.get("/{provider}/callback")
 async def sso_callback(
     request: Request,
+    task_queue: BackgroundTasks,
     client: SSOBase = Depends(get_sso_client),
     redis: Redis = Depends(get_redis_client),
     session: AsyncSession = Depends(get_database_session),
@@ -36,4 +38,5 @@ async def sso_callback(
         tokens = await get_jwt(redis, user)
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
         response.set_cookie("auth_token", tokens.access_token)
+        task_queue.add_task(store_tokens, tokens, user)
         return response
