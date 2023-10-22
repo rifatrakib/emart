@@ -12,7 +12,7 @@ from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.auth import SignupRequestSchema
 from server.models.schemas.out.auth import TokenResponseSchema
 from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt, get_refresh_token
-from server.security.authentication.token import store_tokens, update_tokens
+from server.security.authentication.token import cleanup_tokens, store_tokens, update_tokens
 from server.security.dependencies.acl import get_access_token
 from server.security.dependencies.clients import get_database_session, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form, temporary_url_key
@@ -126,6 +126,7 @@ async def refresh(
 
         return {"access_token": new_access_token, "token_type": "Bearer"}
     except ValueError:
+        task_queue.add_task(cleanup_tokens, access_token)
         raise_401_unauthorized("Please log in again.")
     except HTTPException as e:
         raise e
@@ -137,6 +138,7 @@ async def refresh(
     description="Logout a user account.",
 )
 async def logout(
+    task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
     authorization: Union[str, None] = Header(default=None),
     auth_token: Union[str, None] = Cookie(default=None),
@@ -146,9 +148,12 @@ async def logout(
             raise_401_unauthorized("Not authenticated")
 
         if authorization:
-            await pop_from_cache(redis, authorization.split(" ")[1])
+            token = authorization.split(" ")[1]
+            await pop_from_cache(redis, token)
+            task_queue.add_task(cleanup_tokens, token)
         if auth_token:
             await pop_from_cache(redis, auth_token)
+            task_queue.add_task(cleanup_tokens, auth_token)
 
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
         response.delete_cookie("auth_token")
