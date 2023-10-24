@@ -26,6 +26,35 @@ services:
     networks:
       - private_network
 
+  emart-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - 9200:9200
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  emart-logstash:
+    image: docker.elastic.co/logstash/logstash:7.15.0
+    container_name: logstash
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+    command: logstash -f /usr/share/logstash/config/logstash.conf
+    depends_on:
+      - elasticsearch
+
+  emart-kibana:
+    image: docker.elastic.co/kibana/kibana:7.15.0
+    container_name: kibana
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - emart-elasticsearch
+
   emart-auth-api:
     container_name: emart-auth-api
     build:
@@ -52,6 +81,7 @@ volumes:
   pgdata:
   redisdata:
   redisconfig:
+  elasticsearch_data:
 
 networks:
   private_network:
