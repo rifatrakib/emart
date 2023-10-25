@@ -35,6 +35,8 @@ services:
       - 9200:9200
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - private_network
 
   emart-logstash:
     image: docker.elastic.co/logstash/logstash:7.15.0
@@ -43,7 +45,9 @@ services:
       - ./logstash/config:/usr/share/logstash/config
     command: logstash -f /usr/share/logstash/config/logstash.conf
     depends_on:
-      - elasticsearch
+      - emart-elasticsearch
+    networks:
+      - private_network
 
   emart-kibana:
     image: docker.elastic.co/kibana/kibana:7.15.0
@@ -54,6 +58,8 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
       - emart-elasticsearch
+    networks:
+      - private_network
 
   emart-auth-api:
     container_name: emart-auth-api
