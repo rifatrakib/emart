@@ -116,6 +116,10 @@ class BaseConfig(RootConfig):
     FACEBOOK_OAUTH_CLIENT_ID: str
     FACEBOOK_OAUTH_CLIENT_SECRET: str
 
+    # ELK APM Configurations
+    ELASTIC_APM_SECRET_TOKEN: str
+    ELASTIC_APM_SERVER_URL: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @classmethod
