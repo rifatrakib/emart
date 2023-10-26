@@ -1,6 +1,7 @@
 import subprocess
 from typing import Union
 
+from elasticapm.base import Client
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -18,6 +19,7 @@ from server.routes.auth.v1 import router as auth_router
 from server.routes.profile.v1 import router as profile_router
 from server.routes.sso.v1 import router as sso_router
 from server.security.dependencies.acl import is_superuser
+from server.security.dependencies.clients import get_elastic_apm_client
 from server.utils.html import build_html
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,7 +74,8 @@ async def index(
 
 
 @app.get("/health")
-async def health_check():
+async def health_check(logger: Client = Depends(get_elastic_apm_client)):
+    logger.capture_message("Health check successful")
     return {"app_name": settings.APP_NAME}
 
 

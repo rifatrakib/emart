@@ -1,7 +1,10 @@
+from functools import lru_cache
 from typing import Type
 
 import aioredis
 from aioredis.client import Redis
+from elasticapm.base import Client
+from elasticapm.contrib.starlette import make_apm_client
 from fastapi import Path
 from fastapi_sso.sso.base import SSOBase
 from server.config.factory import settings
@@ -9,6 +12,19 @@ from server.models.database import get_async_database_session
 from server.security.authentication.sso import sso_clients
 from server.utils.enums import Provider
 from sqlalchemy.ext.asyncio import AsyncSession
+
+
+@lru_cache
+def get_elastic_apm_client() -> Client:
+    return make_apm_client(
+        {
+            "SERVICE_NAME": settings.APP_NAME,
+            "SECRET_TOKEN": settings.ELASTIC_APM_SECRET_TOKEN,
+            "SERVER_URL": settings.ELASTIC_APM_SERVER_URL,
+            "ENVIRONMENT": settings.MODE,
+            "LOG_LEVEL": "debug",
+        }
+    )
 
 
 async def get_redis_client() -> Redis:
