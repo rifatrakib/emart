@@ -1,3 +1,4 @@
+import json
 import subprocess
 from enum import Enum
 from typing import Union
@@ -14,6 +15,11 @@ class PostgresConfig(BaseModel):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+
+
+class ElasticAPMConfig(BaseModel):
+    ELASTIC_APM_SECRET_TOKEN: str
+    ELASTIC_APM_SERVER_URL: str
 
 
 class Modes(str, Enum):
@@ -33,10 +39,16 @@ def deploy(mode: Union[str, None] = "development"):
             writer.write(f"MODE={mode}")
 
         with open(f"auth/secrets/{mode}.json") as reader:
-            secrets = PostgresConfig.model_validate_json(reader.read())
+            secrets = json.loads(reader.read())
+
+        with open(".env.elk-apm", "w") as writer:
+            apm_secrets = ElasticAPMConfig.model_validate(secrets)
+            for key, value in apm_secrets.model_dump().items():
+                writer.write(f"{key}={value}\n")
 
         with open("auth/.env.postgres", "w") as writer:
-            for key, value in secrets.model_dump().items():
+            pg_secrets = PostgresConfig.model_validate(secrets)
+            for key, value in pg_secrets.model_dump().items():
                 writer.write(f"{key}={value}\n")
 
         subprocess.run("docker compose up --build")
