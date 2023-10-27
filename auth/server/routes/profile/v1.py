@@ -1,3 +1,4 @@
+from elasticapm.base import Client
 from fastapi import APIRouter, Depends, HTTPException, status
 from server.database.profile.crud import create_user_profile, read_profile_by_username, update_user_profile
 from server.models.schemas.base import MessageResponseSchema
@@ -5,7 +6,7 @@ from server.models.schemas.inc.profile import ProfileCreateSchema, ProfileUpdate
 from server.models.schemas.out.auth import TokenUser
 from server.models.schemas.out.profile import ProfileResponse
 from server.security.dependencies.acl import authenticate_active_user
-from server.security.dependencies.clients import get_database_session
+from server.security.dependencies.clients import get_database_session, get_elastic_apm_client
 from server.utils.enums import Tags, Versions
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +22,7 @@ router = APIRouter(prefix="/v1/profiles", tags=[Tags.profile, Versions.v1])
 )
 async def create_profile(
     payload: ProfileCreateSchema,
+    logger: Client = Depends(get_elastic_apm_client),
     user: TokenUser = Depends(authenticate_active_user),
     session: AsyncSession = Depends(get_database_session),
 ):
@@ -28,6 +30,7 @@ async def create_profile(
         new_profile = await create_user_profile(session, user.id, payload)
         return {"msg": f"Profile created successfully for user {new_profile.user_account.username}."}
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
@@ -40,12 +43,14 @@ async def create_profile(
 )
 async def read_user_profile(
     username: str,
+    logger: Client = Depends(get_elastic_apm_client),
     session: AsyncSession = Depends(get_database_session),
 ):
     try:
         user_profile = await read_profile_by_username(session, username)
         return user_profile
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
@@ -58,6 +63,7 @@ async def read_user_profile(
 )
 async def update_profile(
     payload: ProfileUpdateSchema,
+    logger: Client = Depends(get_elastic_apm_client),
     user: TokenUser = Depends(authenticate_active_user),
     session: AsyncSession = Depends(get_database_session),
 ):
@@ -65,4 +71,5 @@ async def update_profile(
         updated_profile = await update_user_profile(session, user.id, payload)
         return updated_profile
     except HTTPException as e:
+        logger.capture_exception()
         raise e

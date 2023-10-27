@@ -1,6 +1,7 @@
 import subprocess
 from typing import Union
 
+from elasticapm.base import Client
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -18,12 +19,15 @@ from server.routes.auth.v1 import router as auth_router
 from server.routes.profile.v1 import router as profile_router
 from server.routes.sso.v1 import router as sso_router
 from server.security.dependencies.acl import is_superuser
+from server.security.dependencies.clients import get_elastic_apm_client
 from server.utils.html import build_html
+from server.utils.middlewares import log_middleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.middleware("http")(log_middleware)
 
 app.include_router(auth_router)
 app.include_router(sso_router)
@@ -40,9 +44,11 @@ async def on_startup():
     run_alembic_migration()
 
     session: AsyncSession = get_async_database_session()
+    client: Client = get_elastic_apm_client()
 
     try:
         await read_admin_account(session=session)
+        client.capture_message("Admin account already exists")
     except HTTPException:
         info = SignupRequestSchema(
             username=settings.ADMIN_USERNAME,
@@ -53,6 +59,7 @@ async def on_startup():
 
         admin_info = ProfileCreateSchema(first_name=settings.ADMIN_FIRST_NAME, last_name=settings.ADMIN_LAST_NAME)
         await create_admin_profile(session=session, admin_account=admin, payload=admin_info)
+        client.capture_message("Admin account created")
 
     await session.close()
 
@@ -60,6 +67,7 @@ async def on_startup():
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def index(
     request: Request,
+    logger: Client = Depends(get_elastic_apm_client),
     user: Union[TokenUser, None] = Depends(is_superuser),
 ):
     try:
@@ -68,6 +76,7 @@ async def index(
 
         return build_html({"request": request, "user": None}, "index.html")
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
