@@ -1,6 +1,7 @@
 from typing import Union
 
 from aioredis.client import Redis
+from elasticapm.base import Client
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Header, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,7 +15,7 @@ from server.models.schemas.out.auth import TokenResponseSchema
 from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt, get_refresh_token
 from server.security.authentication.token import cleanup_tokens, store_tokens, update_tokens
 from server.security.dependencies.acl import get_access_token
-from server.security.dependencies.clients import get_database_session, get_redis_client
+from server.security.dependencies.clients import get_database_session, get_elastic_apm_client, get_redis_client
 from server.security.dependencies.request import email_form_field, login_form, signup_form, temporary_url_key
 from server.utils.enums import Modes, Tags, Versions
 from server.utils.exceptions import raise_401_unauthorized
@@ -41,6 +42,7 @@ async def register(
     request: Request,
     task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
+    logger: Client = Depends(get_elastic_apm_client),
     payload: SignupRequestSchema = Depends(signup_form),
     session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
@@ -66,6 +68,7 @@ async def register(
 
         return {"msg": "User account created. Check your email to activate your account."}
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
@@ -81,6 +84,7 @@ async def login(
     task_queue: BackgroundTasks,
     referer: Union[str, None] = Header(default=None),
     redis: Redis = Depends(get_redis_client),
+    logger: Client = Depends(get_elastic_apm_client),
     payload: OAuth2PasswordRequestForm = Depends(login_form),
     session: AsyncSession = Depends(get_database_session),
 ) -> TokenResponseSchema:
@@ -101,6 +105,7 @@ async def login(
 
         return {"access_token": tokens.access_token, "token_type": "Bearer"}
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
@@ -114,6 +119,7 @@ async def login(
 async def refresh(
     task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
+    logger: Client = Depends(get_elastic_apm_client),
     access_token: str = Depends(get_access_token),
 ):
     try:
@@ -127,8 +133,10 @@ async def refresh(
         return {"access_token": new_access_token, "token_type": "Bearer"}
     except ValueError:
         task_queue.add_task(cleanup_tokens, access_token)
+        logger.capture_message("Refresh token expired")
         raise_401_unauthorized("Please log in again.")
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
@@ -140,6 +148,7 @@ async def refresh(
 async def logout(
     task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
+    logger: Client = Depends(get_elastic_apm_client),
     authorization: Union[str, None] = Header(default=None),
     auth_token: Union[str, None] = Cookie(default=None),
 ):
@@ -159,6 +168,7 @@ async def logout(
         response.delete_cookie("auth_token")
         return response
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
@@ -170,6 +180,7 @@ async def logout(
 )
 async def activate_account(
     redis: Redis = Depends(get_redis_client),
+    logger: Client = Depends(get_elastic_apm_client),
     session: AsyncSession = Depends(get_database_session),
     validation_key: str = Depends(temporary_url_key),
 ) -> MessageResponseSchema:
@@ -178,6 +189,7 @@ async def activate_account(
         updated_user = await activate_user_account(session=session, user_id=user["id"])
         return {"msg": f"User account {updated_user.username} activated."}
     except HTTPException as e:
+        logger.capture_exception()
         raise e
 
 
@@ -191,6 +203,7 @@ async def resend_activation_key(
     request: Request,
     task_queue: BackgroundTasks,
     redis: Redis = Depends(get_redis_client),
+    logger: Client = Depends(get_elastic_apm_client),
     email: EmailStr = Depends(email_form_field),
     session: AsyncSession = Depends(get_database_session),
 ):
@@ -216,4 +229,5 @@ async def resend_activation_key(
 
         return {"msg": "Activation key sent."}
     except HTTPException as e:
+        logger.capture_exception()
         raise e
