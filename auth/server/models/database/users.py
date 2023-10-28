@@ -2,7 +2,7 @@ from datetime import date
 
 from server.models.database import Base
 from server.utils.enums import Gender, Provider
-from sqlalchemy import Boolean, Date, ForeignKey, String
+from sqlalchemy import Boolean, Date, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -26,6 +26,24 @@ class Account(Base):
         "RefreshToken",
         back_populates="account",
         uselist=True,
+    )
+    groups: Mapped[list["Group"]] = relationship(
+        "Group",
+        secondary="group_user",
+        back_populates="users",
+        order_by="Group.title",
+    )
+    roles: Mapped[list["Role"]] = relationship(
+        "Role",
+        secondary="role_user",
+        back_populates="users",
+        order_by="Role.title",
+    )
+    permissions: Mapped[list["Permission"]] = relationship(
+        "Permission",
+        secondary="permission_user",
+        back_populates="users",
+        order_by="Permission.object_name, Permission.action",
     )
 
     def __repr__(self) -> str:
@@ -126,3 +144,76 @@ class RefreshToken(Base):
 
     def __repr__(self) -> str:
         return f"<RefreshToken(account_id={self.account_id}>"
+
+
+class Group(Base):
+    title: Mapped[str] = mapped_column(String(length=255), nullable=False, unique=True, index=True)
+
+    roles: Mapped[list["Role"]] = relationship(
+        "Role",
+        secondary="group_role",
+        back_populates="groups",
+        lazy="joined",
+        order_by="Role.title",
+    )
+    users: Mapped[list[Account]] = relationship(
+        Account,
+        secondary="group_user",
+        back_populates="groups",
+    )
+
+    def __repr__(self) -> str:
+        return f'<Group(name="{self.title}")>'
+
+
+class Role(Base):
+    title: Mapped[str] = mapped_column(String(length=128), nullable=False, unique=True, index=True)
+
+    groups: Mapped[list[Group]] = relationship(
+        Group,
+        secondary="group_role",
+        back_populates="roles",
+        order_by="Group.title",
+    )
+    permissions: Mapped[list["Permission"]] = relationship(
+        "Permission",
+        secondary="role_permission",
+        back_populates="roles",
+        lazy="joined",
+        order_by="Permission.object_name, Permission.action",
+    )
+    users: Mapped[list[Account]] = relationship(
+        Account,
+        secondary="role_user",
+        back_populates="roles",
+        order_by="User.email",
+    )
+
+    def __repr__(self) -> str:
+        return f'<Role(name="{self.title}")>'
+
+
+class Permission(Base):
+    __table_args__ = (UniqueConstraint("object_name", "action"),)
+
+    object_name: Mapped[str] = mapped_column(String(length=128), nullable=False)
+    action: Mapped[str] = mapped_column(String(length=32), nullable=False)
+
+    roles: Mapped[list["Role"]] = relationship(
+        "Role",
+        secondary="role_permission",
+        back_populates="permissions",
+        order_by="Role.title",
+    )
+    users: Mapped[list[Account]] = relationship(
+        Account,
+        secondary="permission_user",
+        back_populates="permissions",
+        order_by="User.email",
+    )
+
+    def __repr__(self) -> str:
+        return f'<Permission(object_name="{self.object_name}", action="{self.action}")>'
+
+    def to_tuple(self) -> tuple[str, str]:
+        return self.object_name, self.action
