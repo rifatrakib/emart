@@ -6,6 +6,7 @@ from decouple import config
 from pydantic import EmailStr, Extra
 from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+
 from server.utils.enums import Modes
 
 
@@ -61,6 +62,10 @@ class BaseConfig(RootConfig):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+
+    # PGAdmin Configurations
+    PGADMIN_DEFAULT_EMAIL: EmailStr
+    PGADMIN_DEFAULT_PASSWORD: str
 
     # Cache Servers Configurations
     REDIS_HOST: str
