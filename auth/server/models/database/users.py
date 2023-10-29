@@ -1,9 +1,11 @@
 from datetime import date
 
-from server.models.database import Base
-from server.utils.enums import Gender, Provider
-from sqlalchemy import Boolean, Date, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Boolean, Date, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from server.models.database import Base
+from server.models.database.acl import Group, Permission, Role
+from server.utils.enums import Gender, Provider
 
 
 class Account(Base):
@@ -27,20 +29,20 @@ class Account(Base):
         back_populates="account",
         uselist=True,
     )
-    groups: Mapped[list["Group"]] = relationship(
-        "Group",
+    groups: Mapped[list[Group]] = relationship(
+        Group,
         secondary="group_user",
         back_populates="users",
         order_by="Group.name",
     )
-    roles: Mapped[list["Role"]] = relationship(
-        "Role",
+    roles: Mapped[list[Role]] = relationship(
+        Role,
         secondary="role_user",
         back_populates="users",
         order_by="Role.name",
     )
-    permissions: Mapped[list["Permission"]] = relationship(
-        "Permission",
+    permissions: Mapped[list[Permission]] = relationship(
+        Permission,
         secondary="permission_user",
         back_populates="users",
         order_by="Permission.object_name, Permission.action",
@@ -144,156 +146,3 @@ class RefreshToken(Base):
 
     def __repr__(self) -> str:
         return f"<RefreshToken(account_id={self.account_id}>"
-
-
-class Group(Base):
-    name: Mapped[str] = mapped_column(String(length=255), nullable=False, unique=True, index=True)
-
-    roles: Mapped[list["Role"]] = relationship(
-        "Role",
-        secondary="group_role",
-        back_populates="groups",
-        lazy="joined",
-        order_by="Role.name",
-    )
-    users: Mapped[list[Account]] = relationship(
-        Account,
-        secondary="group_user",
-        back_populates="groups",
-    )
-
-    def __repr__(self) -> str:
-        return f'<Group(name="{self.name}")>'
-
-
-class Role(Base):
-    name: Mapped[str] = mapped_column(String(length=128), nullable=False, unique=True, index=True)
-
-    groups: Mapped[list[Group]] = relationship(
-        Group,
-        secondary="group_role",
-        back_populates="roles",
-        order_by="Group.name",
-    )
-    permissions: Mapped[list["Permission"]] = relationship(
-        "Permission",
-        secondary="role_permission",
-        back_populates="roles",
-        lazy="joined",
-        order_by="Permission.object_name, Permission.action",
-    )
-    users: Mapped[list[Account]] = relationship(
-        Account,
-        secondary="role_user",
-        back_populates="roles",
-        order_by="User.email",
-    )
-
-    def __repr__(self) -> str:
-        return f'<Role(name="{self.name}")>'
-
-
-class Permission(Base):
-    __table_args__ = (UniqueConstraint("object_name", "action"),)
-
-    object_name: Mapped[str] = mapped_column(String(length=128), nullable=False)
-    action: Mapped[str] = mapped_column(String(length=32), nullable=False)
-
-    roles: Mapped[list["Role"]] = relationship(
-        "Role",
-        secondary="role_permission",
-        back_populates="permissions",
-        order_by="Role.name",
-    )
-    users: Mapped[list[Account]] = relationship(
-        Account,
-        secondary="permission_user",
-        back_populates="permissions",
-        order_by="User.email",
-    )
-
-    def __repr__(self) -> str:
-        return f'<Permission(object_name="{self.object_name}", action="{self.action}")>'
-
-    def to_tuple(self) -> tuple[str, str]:
-        return self.object_name, self.action
-
-
-class GroupRole(Base):
-    group_id: Mapped[int] = mapped_column(
-        ForeignKey("group.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-    role_id: Mapped[int] = mapped_column(
-        ForeignKey("role.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-
-    def __repr__(self) -> str:
-        return f'<GroupRole(group_id="{self.group_id}", role_id="{self.role_id}")>'
-
-
-class RolePermission(Base):
-    role_id: Mapped[int] = mapped_column(
-        ForeignKey("role.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-    permission_id: Mapped[int] = mapped_column(
-        ForeignKey("permission.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-
-    def __repr__(self) -> str:
-        return f'<RolePermission(role_id="{self.role_id}", permission_id="{self.permission_id}")>'
-
-
-class GroupAccount(Base):
-    group_id: Mapped[int] = mapped_column(
-        ForeignKey("group.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-    account_id: Mapped[int] = mapped_column(
-        ForeignKey("account.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-
-    def __repr__(self) -> str:
-        return f'<GroupAccount(group_id="{self.group_id}", account_id="{self.account_id}")>'
-
-
-class RoleAccount(Base):
-    role_id: Mapped[int] = mapped_column(
-        ForeignKey("role.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-    account_id: Mapped[int] = mapped_column(
-        ForeignKey("account.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-
-    def __repr__(self) -> str:
-        return f'<RoleAccount(role_id="{self.role_id}", account_id="{self.account_id}")>'
-
-
-class PermissionAccount(Base):
-    permission_id: Mapped[int] = mapped_column(
-        ForeignKey("permission.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-    account_id: Mapped[int] = mapped_column(
-        ForeignKey("account.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-
-    def __repr__(self) -> str:
-        return f'<PermissionAccount(permission_id="{self.permission_id}", account_id="{self.account_id}")>'
