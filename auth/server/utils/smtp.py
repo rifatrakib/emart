@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 from fastapi import Request
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import EmailStr, HttpUrl
+
 from server.config.factory import settings
 from server.models.database.users import Account
 from server.utils.html import build_mail_body

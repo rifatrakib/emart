@@ -2,12 +2,13 @@ from typing import Union
 
 from fastapi import Cookie, Depends
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.database.user.auth import read_user_by_email
 from server.models.schemas.out.auth import TokenUser
 from server.security.authentication.jwt import decode_access_token
 from server.security.dependencies.clients import get_database_session
 from server.utils.exceptions import raise_401_unauthorized
-from sqlalchemy.ext.asyncio import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
 

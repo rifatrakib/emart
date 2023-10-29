@@ -2,6 +2,7 @@ from datetime import date
 from typing import Union
 
 from pydantic import EmailStr, Field, validator
+
 from server.models.schemas.base import BaseAPISchema
 from server.models.schemas.base.fields import address_field, birth_date_field, email_field, gender_field, name_field, username_field
 from server.utils.enums import Gender

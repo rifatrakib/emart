@@ -1,5 +1,6 @@
 from elasticapm.base import Client
 from fastapi import Request
+
 from server.security.dependencies.clients import get_elastic_apm_client
 
 

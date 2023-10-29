@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 from decouple import config
+
 from server.config.environments.base import BaseConfig
 from server.config.environments.development import DevelopmentConfig, IgnoreSMTPConfig
 from server.config.environments.production import ProductionConfig

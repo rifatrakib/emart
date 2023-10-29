@@ -7,11 +7,12 @@ from elasticapm.base import Client
 from elasticapm.contrib.starlette import make_apm_client
 from fastapi import Path
 from fastapi_sso.sso.base import SSOBase
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.config.factory import settings
 from server.models.database import get_async_database_session
 from server.security.authentication.sso import sso_clients
 from server.utils.enums import Provider
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @lru_cache

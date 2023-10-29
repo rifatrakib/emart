@@ -1,12 +1,13 @@
 from datetime import datetime
 
 from pydash import snake_case
-from server.config.factory import settings
 from sqlalchemy import DateTime
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column, sessionmaker
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.sql import functions
+
+from server.config.factory import settings
 
 
 class Base(DeclarativeBase):

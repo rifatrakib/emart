@@ -1,9 +1,10 @@
-from server.models.database.users import Account, Profile
-from server.models.schemas.inc.profile import ProfileCreateSchema, ProfileUpdateSchema
-from server.utils.exceptions import raise_404_not_found, raise_409_conflict
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from server.models.database.users import Account, Profile
+from server.models.schemas.inc.profile import ProfileCreateSchema, ProfileUpdateSchema
+from server.utils.exceptions import raise_404_not_found, raise_409_conflict
 
 
 async def create_user_profile(

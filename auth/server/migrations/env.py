@@ -4,11 +4,12 @@ from logging.config import fileConfig
 
 from alembic import context
 from asyncpg.exceptions import InvalidAuthorizationSpecificationError
-from server.config.factory import settings
-from server.models.database.users import Account
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
+from server.config.factory import settings
+from server.models.database.users import Account
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

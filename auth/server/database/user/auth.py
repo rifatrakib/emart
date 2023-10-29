@@ -1,13 +1,14 @@
 from pydantic import EmailStr
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.config.factory import settings
 from server.models.database.users import Account
 from server.models.schemas.inc.auth import SignupRequestSchema
 from server.security.authentication.password import pwd_generator
 from server.utils.enums import Provider
 from server.utils.exceptions import raise_401_unauthorized, raise_403_forbidden, raise_404_not_found, raise_409_conflict
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_user_account(session: AsyncSession, payload: SignupRequestSchema) -> Account:

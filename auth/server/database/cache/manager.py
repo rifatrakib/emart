@@ -2,6 +2,7 @@ import json
 from typing import Union
 
 from aioredis.client import Redis
+
 from server.utils.exceptions import raise_410_gone
 
 
