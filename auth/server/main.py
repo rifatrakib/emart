@@ -26,23 +26,13 @@ from server.security.dependencies.clients import get_elastic_apm_client
 from server.utils.html import build_html
 from server.utils.middlewares import log_middleware
 
-app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-app.middleware("http")(log_middleware)
-
-app.include_router(auth_router)
-app.include_router(sso_router)
-app.include_router(account_router)
-app.include_router(profile_router)
-
 
 def run_alembic_migration():
     subprocess.run("alembic upgrade head", shell=True)
 
 
 @asynccontextmanager
-async def on_startup():
+async def lifespan():
     run_alembic_migration()
 
     session: AsyncSession = get_async_database_session()
@@ -65,6 +55,17 @@ async def on_startup():
 
     await session.close()
     yield
+
+
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, lifespan=lifespan)
+
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.middleware("http")(log_middleware)
+
+app.include_router(auth_router)
+app.include_router(sso_router)
+app.include_router(account_router)
+app.include_router(profile_router)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
