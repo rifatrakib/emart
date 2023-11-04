@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Extra, validator
+
 from server.utils.formatters import format_datetime_into_isoformat, format_dict_key_to_camel_case
 
 

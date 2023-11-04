@@ -1,4 +1,5 @@
 from pydantic import EmailStr, validator
+
 from server.models.schemas.base import BaseRequestSchema
 from server.utils.exceptions import raise_422_unprocessable_entity
 from server.utils.helper import validate_password

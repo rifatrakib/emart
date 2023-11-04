@@ -1,5 +1,7 @@
 from elasticapm.base import Client
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.database.profile.crud import create_user_profile, read_profile_by_username, update_user_profile
 from server.models.schemas.base import MessageResponseSchema
 from server.models.schemas.inc.profile import ProfileCreateSchema, ProfileUpdateSchema
@@ -8,7 +10,6 @@ from server.models.schemas.out.profile import ProfileResponse
 from server.security.dependencies.acl import authenticate_active_user
 from server.security.dependencies.clients import get_database_session, get_elastic_apm_client
 from server.utils.enums import Tags, Versions
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/v1/profiles", tags=[Tags.profile, Versions.v1])
 

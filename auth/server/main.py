@@ -1,4 +1,5 @@
 import subprocess
+from contextlib import asynccontextmanager
 from typing import Union
 
 from elasticapm.base import Client
@@ -7,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.config.factory import settings
 from server.database.profile.crud import create_admin_profile
 from server.database.user.auth import create_admin_account, read_admin_account
@@ -22,25 +25,14 @@ from server.security.dependencies.acl import is_superuser
 from server.security.dependencies.clients import get_elastic_apm_client
 from server.utils.html import build_html
 from server.utils.middlewares import log_middleware
-from sqlalchemy.ext.asyncio import AsyncSession
-
-app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-app.middleware("http")(log_middleware)
-
-app.include_router(auth_router)
-app.include_router(sso_router)
-app.include_router(account_router)
-app.include_router(profile_router)
 
 
 def run_alembic_migration():
     subprocess.run("alembic upgrade head", shell=True)
 
 
-@app.on_event("startup")
-async def on_startup():
+@asynccontextmanager
+async def lifespan():
     run_alembic_migration()
 
     session: AsyncSession = get_async_database_session()
@@ -62,6 +54,18 @@ async def on_startup():
         client.capture_message("Admin account created")
 
     await session.close()
+    yield
+
+
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, lifespan=lifespan)
+
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.middleware("http")(log_middleware)
+
+app.include_router(auth_router)
+app.include_router(sso_router)
+app.include_router(account_router)
+app.include_router(profile_router)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)

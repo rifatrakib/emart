@@ -1,13 +1,14 @@
 from typing import Union
 
 import aioredis
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.config.factory import settings
 from server.database.cache.manager import remove_from_cache
 from server.database.token.crud import remove_token, update_access_token, write_tokens
 from server.models.database import get_async_database_session
 from server.models.database.users import Account
 from server.models.schemas.out.auth import TokenCollectionSchema, TokenUser
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def store_tokens(tokens: TokenCollectionSchema, user: Union[Account, TokenUser]):

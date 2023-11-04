@@ -17,6 +17,11 @@ class PostgresConfig(BaseModel):
     POSTGRES_DB: str
 
 
+class PGAdminConfig(BaseModel):
+    PGADMIN_DEFAULT_EMAIL: str
+    PGADMIN_DEFAULT_PASSWORD: str
+
+
 class ElasticAPMConfig(BaseModel):
     ELASTIC_APM_SECRET_TOKEN: str
     ELASTIC_APM_SERVER_URL: str
@@ -49,6 +54,11 @@ def deploy(mode: Union[str, None] = "development"):
         with open("auth/.env.postgres", "w") as writer:
             pg_secrets = PostgresConfig.model_validate(secrets)
             for key, value in pg_secrets.model_dump().items():
+                writer.write(f"{key}={value}\n")
+
+        with open("auth/.env.pgadmin", "w") as writer:
+            pgadmin_secrets = PGAdminConfig.model_validate(secrets)
+            for key, value in pgadmin_secrets.model_dump().items():
                 writer.write(f"{key}={value}\n")
 
         subprocess.run("docker compose up --build")

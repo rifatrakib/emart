@@ -1,10 +1,11 @@
 from pydantic import EmailStr
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.models.database.users import Account
 from server.models.schemas.inc.auth import PasswordChangeRequestSchema
 from server.security.authentication.password import pwd_generator
 from server.utils.exceptions import raise_401_unauthorized
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def update_password(

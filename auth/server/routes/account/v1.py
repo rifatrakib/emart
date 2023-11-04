@@ -2,6 +2,8 @@ from aioredis.client import Redis
 from elasticapm.base import Client
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.config.factory import settings
 from server.database.cache.manager import pop_from_cache, validate_key
 from server.database.user.auth import read_user_by_email
@@ -16,7 +18,6 @@ from server.security.dependencies.request import email_form_field, password_chan
 from server.utils.enums import Modes, Tags, Versions
 from server.utils.helper import generate_temporary_url
 from server.utils.smtp import send_activation_mail
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/v1/accounts", tags=[Tags.account, Versions.v1])
 

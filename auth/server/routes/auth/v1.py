@@ -6,6 +6,8 @@ from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Header, HTTPExc
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from server.config.factory import settings
 from server.database.cache.manager import pop_from_cache, remove_from_cache, write_data_to_cache
 from server.database.user.auth import activate_user_account, authenticate_user, create_user_account, read_user_by_email
@@ -21,7 +23,6 @@ from server.utils.enums import Modes, Tags, Versions
 from server.utils.exceptions import raise_401_unauthorized
 from server.utils.helper import generate_temporary_url
 from server.utils.smtp import send_activation_mail
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/v1/auth", tags=[Tags.authentication, Versions.v1])
 

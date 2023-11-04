@@ -1,6 +1,7 @@
 from fastapi import Depends, Form, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
+
 from server.models.schemas.base.fields import email_field, password_field, username_field
 from server.models.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
 from server.utils.exceptions import raise_422_unprocessable_entity

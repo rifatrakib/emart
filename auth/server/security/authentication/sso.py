@@ -4,6 +4,7 @@ from fastapi_sso.sso.facebook import FacebookSSO
 from fastapi_sso.sso.github import GithubSSO
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.microsoft import MicrosoftSSO
+
 from server.config.factory import settings
 
 

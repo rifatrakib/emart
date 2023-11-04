@@ -1,9 +1,10 @@
 from fastapi_sso.sso.base import OpenID
-from server.models.database.users import Account
-from server.utils.exceptions import raise_409_conflict
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from server.models.database.users import Account
+from server.utils.exceptions import raise_409_conflict
 
 
 async def read_sso_user(session: AsyncSession, payload: OpenID) -> Account:

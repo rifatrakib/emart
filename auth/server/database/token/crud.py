@@ -1,7 +1,8 @@
-from server.models.database.users import RefreshToken
-from server.models.schemas.out.auth import TokenCollectionSchema
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from server.models.database.users import RefreshToken
+from server.models.schemas.out.auth import TokenCollectionSchema
 
 
 async def write_tokens(session: AsyncSession, account_id: int, tokens: TokenCollectionSchema):

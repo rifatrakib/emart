@@ -1,9 +1,11 @@
 from datetime import date
 
-from server.models.database import Base
-from server.utils.enums import Gender, Provider
 from sqlalchemy import Boolean, Date, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from server.models.database import Base
+from server.models.database.acl import Group, Permission, Role
+from server.utils.enums import Gender, Provider
 
 
 class Account(Base):
@@ -26,6 +28,24 @@ class Account(Base):
         "RefreshToken",
         back_populates="account",
         uselist=True,
+    )
+    groups: Mapped[list[Group]] = relationship(
+        Group,
+        secondary="group_user",
+        back_populates="users",
+        order_by="Group.name",
+    )
+    roles: Mapped[list[Role]] = relationship(
+        Role,
+        secondary="role_user",
+        back_populates="users",
+        order_by="Role.name",
+    )
+    permissions: Mapped[list[Permission]] = relationship(
+        Permission,
+        secondary="permission_user",
+        back_populates="users",
+        order_by="Permission.object_name, Permission.action",
     )
 
     def __repr__(self) -> str:
