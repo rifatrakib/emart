@@ -32,7 +32,7 @@ def run_alembic_migration():
 
 
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastAPI):
     run_alembic_migration()
 
     session: AsyncSession = get_async_database_session()
