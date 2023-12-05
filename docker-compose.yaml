@@ -118,6 +118,21 @@ services:
       - emart-auth-rds
       - emart-auth-cache
 
+  emart-shop-api:
+    container_name: emart-shop-api
+    build:
+      context: ./shop
+    working_dir: /shop
+    command: npm start
+    ports:
+      - "3000:3000"
+    restart: on-failure
+    volumes:
+      - ./shop:/shop
+    networks:
+      - public_network
+      - private_network
+
 volumes:
   pgdata:
   pgadmin_data:
