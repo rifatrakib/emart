@@ -1,6 +1,8 @@
 import express from 'express';
+import { logger } from './logger.js';
 
 const app = express();
+app.use(logger);
 
 app.get('/shop-api/health', (req, res) => {
     res.json({ status: 'ok' });
