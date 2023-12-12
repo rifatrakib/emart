@@ -5,7 +5,7 @@ const app = express();
 app.use(logger);
 
 app.get('/shop-api/health', (req, res) => {
-    res.json({ status: 'ok' });
+    res.status(200).json({ status: 'ok' });
 });
 
 app.listen(3000, () => {

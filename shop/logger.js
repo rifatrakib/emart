@@ -1,5 +1,4 @@
 export const logger = (req, res, next) => {
-    console.log(`Request: ${req.method} ${req.originalUrl}`);
     next();
-    console.log(`Response: ${res.statusCode}`);
+    console.log(`${req.method} ${req.url} ${res.statusCode}`);
 }
