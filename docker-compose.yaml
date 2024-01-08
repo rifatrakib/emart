@@ -44,7 +44,7 @@ services:
     env_file:
       - .env.elk-apm
     ports:
-      - 8200:8200
+      - 8100:8200
     networks:
       - private_network
     depends_on:
