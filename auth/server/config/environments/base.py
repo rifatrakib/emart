@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Any, Dict, Tuple, Type, Union
 
 from decouple import config
-from pydantic import EmailStr, Extra
+from pydantic import ConfigDict, EmailStr
 from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
@@ -40,9 +40,7 @@ class SettingsSource(PydanticBaseSettingsSource):
 
 
 class RootConfig(BaseSettings):
-    class Config:
-        env_file_encoding = "UTF-8"
-        extra = Extra.forbid
+    model_config = ConfigDict(env_file_encoding="utf-8", extra="forbid")
 
 
 class BaseConfig(RootConfig):
