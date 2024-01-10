@@ -1,0 +1,69 @@
+[tool.poetry]
+name = "emart-gateway"
+version = "0.1.0"
+description = "A service to provide authentication and authorization API along with API gateway functionalities"
+authors = ["rifatrakib <Rakib.1508@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = {extras = ["all"], version = "^0.108.0"}
+python-decouple = "^3.8"
+pydash = "^7.0.6"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.25"}
+asyncpg = "^0.29.0"
+alembic = "^1.13.1"
+aioredis = "^2.0.1"
+fastapi-mail = "^1.4.1"
+passlib = {extras = ["argon2", "bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+fastapi-sso = "^0.9.1"
+elastic-apm = "^6.19.0"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+black = "^23.12.1"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+ruff = "^0.1.11"
+
+[tool.black]
+line-length = 140
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+| \.hg
+| \.mypy_cache
+| \.tox
+| \.venv
+| _build
+| buck-out
+| build
+)/
+'''
+
+[tool.flake8]
+max-line-length = 140
+exclude = [".git", "__pycache__", "dist"]
+max-complexity = 10
+
+[tool.isort]
+atomic = true
+profile = "black"
+line_length = 140
+skip_gitignore = true
+
+[tool.ruff]
+line-length = 140
+exclude = [".git", "__pycache__", "dist"]
+target-version = "py39"
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
