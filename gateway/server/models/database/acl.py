@@ -101,7 +101,7 @@ class RolePermission(Base):
         return f'{self.__class__.__name__}(role_id="{self.role_id}", permission_id="{self.permission_id}")'
 
 
-class AccountGroup(Base):
+class GroupAccount(Base):
     group_id: Mapped[int] = mapped_column(
         ForeignKey(column="group.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
@@ -117,7 +117,7 @@ class AccountGroup(Base):
         return f'{self.__class__.__name__}(group_id="{self.group_id}", account_id="{self.account_id}")'
 
 
-class AccountRole(Base):
+class RoleAccount(Base):
     role_id: Mapped[int] = mapped_column(
         ForeignKey(column="role.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
@@ -133,7 +133,7 @@ class AccountRole(Base):
         return f'{self.__class__.__name__}(role_id="{self.role_id}", account_id="{self.account_id}")'
 
 
-class AccountPermission(Base):
+class PermissionAccount(Base):
     permission_id: Mapped[int] = mapped_column(
         ForeignKey(column="permission.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,

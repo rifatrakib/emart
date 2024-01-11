@@ -33,17 +33,17 @@ class Account(Base):
     )
     groups: Mapped[list[Group]] = relationship(
         Group,
-        secondary="group_user",
+        secondary="group_account",
         back_populates="accounts",
     )
     roles: Mapped[list[Role]] = relationship(
         Role,
-        secondary="role_user",
+        secondary="role_account",
         back_populates="accounts",
     )
     permissions: Mapped[list[Permission]] = relationship(
         Permission,
-        secondary="permission_user",
+        secondary="permission_account",
         back_populates="accounts",
     )
 
