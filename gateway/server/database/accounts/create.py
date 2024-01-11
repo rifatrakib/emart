@@ -2,7 +2,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.config.factory import settings
-from server.database.access_control.create import create_admin_permissions, create_admin_role
+from server.database.access_control.create import create_admin_role
 from server.models.database.accounts import Account
 from server.security.authentication.passlib import pwd_generator
 from server.utils.enums import Provider
@@ -28,9 +28,7 @@ async def create_admin_account(session: AsyncSession) -> None:
             ),
         )
         admin.set_provider(provider=Provider.google)
-
         admin.roles.append(await create_admin_role())
-        admin.permissions.extend(await create_admin_permissions())
 
         session.add(admin)
         await session.commit()

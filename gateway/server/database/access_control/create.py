@@ -1,11 +1,6 @@
 from server.models.database.acl import Permission, Role
 
 
-async def create_admin_role() -> Role:
-    role = Role(title="admin")
-    return role
-
-
 async def create_admin_permissions() -> list[Permission]:
     permissions = [
         Permission(object_name="all", action="create"),
@@ -14,3 +9,9 @@ async def create_admin_permissions() -> list[Permission]:
         Permission(object_name="all", action="delete"),
     ]
     return permissions
+
+
+async def create_admin_role() -> Role:
+    role = Role(title="admin")
+    role.permissions.extend(await create_admin_permissions())
+    return role
