@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir --upgrade -r /gateway/requirements.txt
 COPY ./server /gateway/server
 COPY ./secrets /gateway/secrets
 
-CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "server:main", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,6 +1,11 @@
 from enum import Enum
 
 
+class Gender(str, Enum):
+    male = "m"
+    female = "f"
+
+
 class Modes(str, Enum):
     development = "development"
     staging = "staging"
@@ -8,13 +13,18 @@ class Modes(str, Enum):
     ignore_smtp = "ignore-smtp"
 
 
-class Gender(str, Enum):
-    male = "m"
-    female = "f"
-
-
 class Provider(str, Enum):
     google = "google"
     github = "github"
     facebook = "facebook"
     microsoft = "microsoft"
+
+
+class Tags(str, Enum):
+    health_check = "Health Check"
+    accounts = "Accounts"
+    authentication = "Authentication"
+
+
+class Versions(str, Enum):
+    version_1 = "Version 1"
