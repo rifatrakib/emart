@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.config.factory import settings
 from server.database.access_control.create import create_admin_role
-from server.models.database.accounts import Account
+from server.models.database.accounts import Account, RefreshToken
+from server.models.schemas.responses.auth import TokenCollectionSchema
 from server.security.authentication.passlib import pwd_generator
 from server.utils.enums import Provider
 from server.utils.exceptions import handle_404_not_found
@@ -63,3 +64,13 @@ async def create_new_account(session: AsyncSession, payload: dict[str, Any]) -> 
     except IntegrityError:
         await session.rollback()
         raise handle_404_not_found("username or email already exists")
+
+
+async def write_tokens(session: AsyncSession, account_id: int, tokens: TokenCollectionSchema):
+    refresh_token = RefreshToken(
+        refresh_token=tokens.refresh_token,
+        access_token=tokens.access_token,
+        account_id=account_id,
+    )
+    session.add(refresh_token)
+    await session.commit()

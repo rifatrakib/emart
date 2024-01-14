@@ -1,14 +1,18 @@
 from aioredis.client import Redis
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.config.factory import settings
 from server.connections.clients import get_database_session, get_redis_client
 from server.database.accounts.create import create_new_account
-from server.database.accounts.read import check_email_and_username_availabililty
+from server.database.accounts.read import authenticate_user, check_email_and_username_availabililty
 from server.database.cache import read_from_cache, remove_from_cache
+from server.events.auth import store_tokens
 from server.models.schemas.requests.auth import SignupRequestSchema
 from server.models.schemas.responses import MessageResponseSchema
+from server.models.schemas.responses.auth import TokenResponseSchema
+from server.security.authentication.jwt import get_jwt
 from server.security.dependencies.requests import temporary_url_key
 from server.smtp.tasks import send_activation_mail
 from server.utils.enums import Modes, Tags
@@ -56,6 +60,21 @@ def create_auth_router():
             account = await create_new_account(session, data)
             queue.add_task(remove_from_cache, redis, key)
             return {"msg": f"Account of {account.full_name} activated."}
+        except Exception as e:
+            raise e
+
+    @router.post("/login", response_model=TokenResponseSchema)
+    async def login_account(
+        queue: BackgroundTasks,
+        redis: Redis = Depends(get_redis_client),
+        payload: OAuth2PasswordRequestForm = Depends(),
+        session: AsyncSession = Depends(get_database_session),
+    ) -> MessageResponseSchema:
+        try:
+            user = await authenticate_user(session, payload.username, payload.password)
+            tokens = await get_jwt(redis, user)
+            queue.add_task(store_tokens, tokens, user)
+            return {"access_token": tokens.access_token, "token_type": "Bearer"}
         except Exception as e:
             raise e
 
