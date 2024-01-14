@@ -1,7 +1,7 @@
-from fastapi import HTTPException, status
 from pydantic import EmailStr, validator
 
 from server.models.schemas.requests import BaseRequestSchema
+from server.utils.exceptions import handle_422_unprocessable_entity
 from server.utils.helpers import validate_password
 
 
@@ -17,7 +17,4 @@ class SignupRequestSchema(BaseRequestSchema):
         try:
             return validate_password(v)
         except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={"msg": e.args[0]},
-            )
+            raise handle_422_unprocessable_entity(e.args[0])

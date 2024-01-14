@@ -1,27 +1,19 @@
-import json
 import re
-from typing import Any
 from uuid import uuid4
 
 from aioredis.client import Redis
 
 from server.config.factory import settings
 from server.database.cache import write_data_to_cache
-from server.models.database.accounts import Account
 
 
 def create_tags(tags: list[str]) -> list[str]:
     return [f"{settings.APP_NAME}: {tag}" for tag in tags]
 
 
-def prepare_account_data(account: Account) -> dict[str, Any]:
-    return {"id": account.id, "username": account.username, "email": account.email}
-
-
-async def generate_temporary_key(client: Redis, account: Account) -> str:
+async def generate_temporary_key(client: Redis, data: str) -> str:
     key = str(uuid4())
-    data = prepare_account_data(account)
-    await write_data_to_cache(client=client, key=key, data=json.dumps(data), expire=60)
+    await write_data_to_cache(client, key, data, 60)
     return key
 
 

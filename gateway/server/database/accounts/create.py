@@ -1,13 +1,14 @@
-from fastapi import HTTPException, status
+from typing import Any
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.config.factory import settings
 from server.database.access_control.create import create_admin_role
 from server.models.database.accounts import Account
-from server.models.schemas.requests.auth import SignupRequestSchema
 from server.security.authentication.passlib import pwd_generator
 from server.utils.enums import Provider
+from server.utils.exceptions import handle_404_not_found
 
 
 async def create_admin_account(session: AsyncSession) -> None:
@@ -38,13 +39,14 @@ async def create_admin_account(session: AsyncSession) -> None:
         await session.rollback()
 
 
-async def create_new_account(session: AsyncSession, payload: SignupRequestSchema) -> Account:
+async def create_new_account(session: AsyncSession, payload: dict[str, Any]) -> Account:
     try:
         account = Account(
             username=payload.username,
             email=payload.email,
             first_name=payload.first_name,
             last_name=payload.last_name,
+            is_active=True,
         )
         account.set_hash_salt(hash_salt=pwd_generator.generate_salt)
         account.set_hashed_password(
@@ -60,7 +62,4 @@ async def create_new_account(session: AsyncSession, payload: SignupRequestSchema
         return account
     except IntegrityError:
         await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"msg": "username or email already exists"},
-        )
+        raise handle_404_not_found("username or email already exists")

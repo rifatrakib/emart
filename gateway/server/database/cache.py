@@ -1,7 +1,9 @@
-from typing import Union
+import json
+from typing import Any, Union
 
 from aioredis.client import Redis
-from fastapi import HTTPException, status
+
+from server.utils.exceptions import handle_410_gone
 
 
 async def write_data_to_cache(
@@ -13,14 +15,11 @@ async def write_data_to_cache(
     await client.set(key, data, ex=expire)
 
 
-async def read_from_cache(client: Redis, key: str) -> str:
+async def read_from_cache(client: Redis, key: str, is_json: bool = True) -> Union[dict[str, Any], str]:
     data = await client.get(key)
     if not data:
-        raise HTTPException(
-            status_code=status.HTTP_410_GONE,
-            detail={"msg": "Token not found or expired"},
-        )
-    return data
+        raise handle_410_gone("Key expired or not found in cache.")
+    return json.loads(data) if is_json else data
 
 
 async def remove_from_cache(client: Redis, key: str) -> None:
