@@ -105,19 +105,18 @@ class BaseConfig(RootConfig):
     # SSO Configurations - Google
     GOOGLE_OAUTH_CLIENT_ID: str
     GOOGLE_OAUTH_CLIENT_SECRET: str
+    GOOGLE_OAUTH_CALLBACK_URL: str
 
     # SSO Configurations - GitHub
     GITHUB_OAUTH_CLIENT_ID: str
     GITHUB_OAUTH_CLIENT_SECRET: str
+    GITHUB_OAUTH_CALLBACK_URL: str
 
     # SSO Configurations - Microsoft
     MICROSOFT_OAUTH_CLIENT_ID: str
     MICROSOFT_OAUTH_CLIENT_SECRET: str
     MICROSOFT_OAUTH_TENANT: str
-
-    # SSO Configurations - Facebook
-    FACEBOOK_OAUTH_CLIENT_ID: str
-    FACEBOOK_OAUTH_CLIENT_SECRET: str
+    MICROSOFT_OAUTH_CALLBACK_URL: str
 
     # ELK APM Configurations
     ELASTIC_APM_SECRET_TOKEN: str

@@ -29,6 +29,13 @@ def handle_404_not_found(msg: str) -> HTTPException:
     )
 
 
+def handle_409_conflict(msg: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"msg": msg},
+    )
+
+
 def handle_410_gone(msg: str) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_410_GONE,

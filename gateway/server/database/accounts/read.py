@@ -1,3 +1,4 @@
+from fastapi_sso.sso.base import OpenID
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +27,17 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
     if not pwd_generator.verify_password(user.hash_salt, password, user.hashed_password):
         raise handle_401_unauthorized(msg="Incorrect credentials.")
 
+    return user
+
+
+async def read_sso_account(session: AsyncSession, payload: OpenID) -> Account:
+    stmt = select(Account).where(
+        Account.open_id == payload.id,
+        Account.email == payload.email,
+        Account._provider == payload.provider,
+    )
+    query = await session.execute(stmt)
+    user = query.scalar()
     return user
 
 

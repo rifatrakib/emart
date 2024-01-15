@@ -1,5 +1,6 @@
 from typing import Any
 
+from fastapi_sso.sso.base import OpenID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +10,7 @@ from server.models.database.accounts import Account, RefreshToken
 from server.models.schemas.responses.auth import TokenCollectionSchema
 from server.security.authentication.passlib import pwd_generator
 from server.utils.enums import Provider
-from server.utils.exceptions import handle_404_not_found
+from server.utils.exceptions import handle_404_not_found, handle_409_conflict
 
 
 async def create_admin_account(session: AsyncSession) -> None:
@@ -64,6 +65,19 @@ async def create_new_account(session: AsyncSession, payload: dict[str, Any]) -> 
     except IntegrityError:
         await session.rollback()
         raise handle_404_not_found("username or email already exists")
+
+
+async def create_sso_account(session: AsyncSession, payload: OpenID) -> Account:
+    try:
+        new_account = Account(open_id=payload.id, email=payload.email)
+        new_account.set_provider(payload.provider)
+
+        session.add(instance=new_account)
+        await session.commit()
+        await session.refresh(instance=new_account)
+        return new_account
+    except IntegrityError:
+        raise handle_409_conflict("openID or email already used for another account.")
 
 
 async def write_tokens(session: AsyncSession, account_id: int, tokens: TokenCollectionSchema):
