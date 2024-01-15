@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.models.database.accounts import Account
+from server.models.database.accounts import Account, RefreshToken
 from server.models.schemas.requests.auth import SignupRequestSchema
 from server.security.authentication.passlib import pwd_generator
 from server.utils.exceptions import handle_401_unauthorized, handle_403_forbidden, handle_404_not_found
@@ -27,3 +27,10 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
         raise handle_401_unauthorized(msg="Incorrect credentials.")
 
     return user
+
+
+async def read_tokens(session: AsyncSession, access_token: str) -> RefreshToken:
+    stmt = select(RefreshToken).where(RefreshToken.access_token == access_token)
+    query = await session.execute(stmt)
+    token = query.scalar()
+    return token

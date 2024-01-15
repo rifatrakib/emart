@@ -7,13 +7,13 @@ from server.config.factory import settings
 from server.connections.clients import get_database_session, get_redis_client
 from server.database.accounts.create import create_new_account
 from server.database.accounts.read import authenticate_user, check_email_and_username_availabililty
-from server.database.cache import read_from_cache, remove_from_cache
-from server.events.auth import store_tokens
+from server.database.cache import read_from_cache, remove_from_cache, write_data_to_cache
+from server.events.auth import store_tokens, update_tokens
 from server.models.schemas.requests.auth import SignupRequestSchema
 from server.models.schemas.responses import MessageResponseSchema
 from server.models.schemas.responses.auth import TokenResponseSchema
-from server.security.authentication.jwt import get_jwt
-from server.security.dependencies.requests import temporary_url_key
+from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt, get_refresh_token
+from server.security.dependencies.requests import get_access_token, temporary_url_key
 from server.smtp.tasks import send_activation_mail
 from server.utils.enums import Modes, Tags
 from server.utils.exceptions import handle_400_bad_request
@@ -75,6 +75,23 @@ def create_auth_router():
             tokens = await get_jwt(redis, user)
             queue.add_task(store_tokens, tokens, user)
             return {"access_token": tokens.access_token, "token_type": "Bearer"}
+        except Exception as e:
+            raise e
+
+    @router.post("/refresh", response_model=TokenResponseSchema)
+    async def refresh_jwt(
+        queue: BackgroundTasks,
+        redis: Redis = Depends(get_redis_client),
+        access_token: str = Depends(get_access_token),
+    ) -> TokenResponseSchema:
+        try:
+            refresh_token = await get_refresh_token(redis, access_token)
+            user = decode_refresh_token(refresh_token)
+            new_access_token = create_access_token(user)
+
+            await write_data_to_cache(redis, new_access_token, refresh_token)
+            queue.add_task(update_tokens, access_token, new_access_token)
+            return {"access_token": new_access_token, "token_type": "Bearer"}
         except Exception as e:
             raise e
 

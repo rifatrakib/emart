@@ -1,4 +1,11 @@
-from fastapi import Query
+from fastapi import Depends, Query
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+
+def get_access_token(token: str = Depends(oauth2_scheme)) -> str:
+    return token
 
 
 def temporary_url_key(

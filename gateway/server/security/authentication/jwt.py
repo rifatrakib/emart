@@ -2,12 +2,15 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from aioredis.client import Redis
-from jose import jwt
+from fastapi import HTTPException
+from jose import JWTError, jwt
+from pydantic import ValidationError
 
 from server.config.factory import settings
-from server.database.cache import write_data_to_cache
+from server.database.cache import read_from_cache, write_data_to_cache
 from server.models.database.accounts import Account
 from server.models.schemas.responses.auth import TokenCollectionSchema, TokenData, TokenUser
+from server.utils.exceptions import handle_401_unauthorized
 
 
 def create_access_token(data: TokenUser, expires_delta: Union[datetime, None] = None) -> str:
@@ -46,3 +49,42 @@ async def get_jwt(redis: Redis, user: Account) -> TokenCollectionSchema:
 
     await write_data_to_cache(redis, access_token, refresh_token)
     return TokenCollectionSchema(access_token=access_token, refresh_token=refresh_token)
+
+
+async def get_refresh_token(redis: Redis, token: str) -> str:
+    try:
+        refresh_token = await read_from_cache(redis, token, is_json=False)
+        if not refresh_token:
+            raise handle_401_unauthorized("Please log in again.")
+
+        return refresh_token
+    except HTTPException:
+        raise handle_401_unauthorized("Please log in again.")
+
+
+def decode_access_token(token: str) -> TokenUser:
+    try:
+        payload = jwt.decode(
+            token=token,
+            key=settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+        return TokenUser(**payload)
+    except JWTError:
+        raise ValueError("unable to decode JWT")
+    except ValidationError:
+        raise ValueError("invalid payload in JWT")
+
+
+def decode_refresh_token(token: str) -> TokenUser:
+    try:
+        payload = jwt.decode(
+            token=token,
+            key=settings.REFRESH_TOKEN_SECRET_KEY,
+            algorithms=[settings.REFRESH_TOKEN_ALGORITHM],
+        )
+        return TokenUser(**payload)
+    except JWTError:
+        raise ValueError("unable to decode JWT")
+    except ValidationError:
+        raise ValueError("invalid payload in JWT")
