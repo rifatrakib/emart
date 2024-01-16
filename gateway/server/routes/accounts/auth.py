@@ -13,7 +13,8 @@ from server.models.schemas.requests.auth import SignupRequestSchema
 from server.models.schemas.responses import MessageResponseSchema
 from server.models.schemas.responses.auth import TokenResponseSchema
 from server.security.authentication.jwt import create_access_token, decode_refresh_token, get_jwt, get_refresh_token
-from server.security.dependencies.requests import get_access_token, temporary_url_key
+from server.security.dependencies.acl import get_access_token
+from server.security.dependencies.requests import temporary_url_key
 from server.smtp.tasks import send_activation_mail
 from server.utils.enums import Modes, Tags
 from server.utils.exceptions import handle_400_bad_request

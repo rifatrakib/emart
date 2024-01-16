@@ -15,6 +15,13 @@ async def check_email_and_username_availabililty(session: AsyncSession, payload:
     return user is None
 
 
+async def read_user_by_email(session: AsyncSession, email: str) -> Account:
+    stmt = select(Account).where(Account.email == email)
+    query = await session.execute(stmt)
+    user = query.scalar()
+    return user
+
+
 async def authenticate_user(session: AsyncSession, username: str, password: str) -> Account:
     stmt = select(Account).where(or_(Account.username == username, Account.email == username))
     query = await session.execute(stmt)
