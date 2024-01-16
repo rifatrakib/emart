@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from server.routes.accounts.auth import create_auth_router
+from server.routes.accounts.email import create_email_router
 from server.routes.accounts.password import create_password_router
 from server.routes.accounts.sso import create_sso_router
 from server.utils.enums import Versions
@@ -12,4 +13,5 @@ def create_accounts_router() -> APIRouter:
     router.include_router(create_auth_router())
     router.include_router(create_sso_router())
     router.include_router(create_password_router())
+    router.include_router(create_email_router())
     return router
