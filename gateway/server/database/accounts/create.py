@@ -1,5 +1,3 @@
-from typing import Any
-
 from fastapi_sso.sso.base import OpenID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from server.config.factory import settings
 from server.database.access_control.create import create_admin_role
 from server.models.database.accounts import Account, RefreshToken
+from server.models.schemas.requests.auth import SignupRequestSchema
 from server.models.schemas.responses.auth import TokenCollectionSchema
 from server.security.authentication.passlib import pwd_generator
 from server.utils.enums import Provider
@@ -41,15 +40,20 @@ async def create_admin_account(session: AsyncSession) -> None:
         await session.rollback()
 
 
-async def create_new_account(session: AsyncSession, payload: dict[str, Any]) -> Account:
+async def create_new_account(session: AsyncSession, payload: SignupRequestSchema) -> Account:
     try:
         account = Account(
             username=payload.username,
             email=payload.email,
             first_name=payload.first_name,
+            middle_name=payload.middle_name,
             last_name=payload.last_name,
+            address=payload.address,
             is_active=True,
         )
+
+        account.set_gender(payload.gender)
+        account.set_birth_date(payload.birth_date)
         account.set_hash_salt(hash_salt=pwd_generator.generate_salt)
         account.set_hashed_password(
             hashed_password=pwd_generator.generate_hashed_password(
