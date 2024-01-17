@@ -15,10 +15,25 @@ async def check_email_and_username_availabililty(session: AsyncSession, payload:
     return user is None
 
 
+async def read_user_by_username(session: AsyncSession, username: str) -> Account:
+    stmt = select(Account).where(Account.username == username)
+    query = await session.execute(stmt)
+    user = query.scalar()
+
+    if not user:
+        raise handle_404_not_found(msg=f"The username {username} is not registered.")
+
+    return user
+
+
 async def read_user_by_email(session: AsyncSession, email: str) -> Account:
     stmt = select(Account).where(Account.email == email)
     query = await session.execute(stmt)
     user = query.scalar()
+
+    if not user:
+        raise handle_404_not_found(msg=f"The email {email} is not registered.")
+
     return user
 
 

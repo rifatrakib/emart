@@ -35,16 +35,19 @@ class Account(Base):
         Group,
         secondary="group_account",
         back_populates="accounts",
+        lazy="joined",
     )
     roles: Mapped[list[Role]] = relationship(
         Role,
         secondary="role_account",
         back_populates="accounts",
+        lazy="joined",
     )
     permissions: Mapped[list[Permission]] = relationship(
         Permission,
         secondary="permission_account",
         back_populates="accounts",
+        lazy="joined",
     )
 
     def __repr__(self) -> str:
@@ -54,8 +57,8 @@ class Account(Base):
     def provider(self) -> Provider:
         if self._provider == Provider.google:
             return Provider.google
-        elif self._provider == Provider.facebook:
-            return Provider.facebook
+        elif self._provider == Provider.github:
+            return Provider.github
         elif self._provider == Provider.microsoft:
             return Provider.microsoft
         return None

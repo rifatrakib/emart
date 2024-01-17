@@ -1,7 +1,7 @@
 import json
 
 from aioredis.client import Redis
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +19,7 @@ from server.utils.enums import Modes, Tags
 from server.utils.helpers import create_tags, generate_temporary_key
 
 
-def create_password_router() -> APIRouter:
+def create_email_router() -> APIRouter:
     router = APIRouter(prefix="/accounts/email", tags=create_tags([Tags.accounts]))
 
     @router.post("/update", response_model=MessageResponseSchema)
@@ -42,11 +42,7 @@ def create_password_router() -> APIRouter:
         except Exception as e:
             raise e
 
-    @router.get(
-        "/update",
-        response_model=MessageResponseSchema,
-        status_code=status.HTTP_204_NO_CONTENT,
-    )
+    @router.get("/update", response_model=MessageResponseSchema)
     async def validate_key(
         redis: Redis = Depends(get_redis_client),
         key: str = Depends(temporary_url_key),

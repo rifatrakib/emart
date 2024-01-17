@@ -1,7 +1,7 @@
 import json
 
 from aioredis.client import Redis
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, Request, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, Request
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,11 +54,7 @@ def create_password_router() -> APIRouter:
         except Exception as e:
             raise e
 
-    @router.get(
-        "/reset",
-        response_model=MessageResponseSchema,
-        status_code=status.HTTP_204_NO_CONTENT,
-    )
+    @router.get("/reset", response_model=MessageResponseSchema)
     async def validate_key(
         redis: Redis = Depends(get_redis_client),
         key: str = Depends(temporary_url_key),

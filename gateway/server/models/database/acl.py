@@ -12,6 +12,7 @@ class Group(Base):
         "Role",
         secondary="group_role",
         back_populates="groups",
+        lazy="joined",
     )
     accounts: Mapped[list["Account"]] = relationship(
         "Account",
@@ -31,11 +32,13 @@ class Role(Base):
         "Group",
         secondary="group_role",
         back_populates="roles",
+        lazy="joined",
     )
     permissions: Mapped[list["Permission"]] = relationship(
         "Permission",
         secondary="role_permission",
         back_populates="roles",
+        lazy="joined",
     )
     accounts: Mapped[list["Account"]] = relationship(
         "Account",
@@ -58,6 +61,7 @@ class Permission(Base):
         "Role",
         secondary="role_permission",
         back_populates="permissions",
+        lazy="joined",
     )
     accounts: Mapped[list["Account"]] = relationship(
         "Account",
