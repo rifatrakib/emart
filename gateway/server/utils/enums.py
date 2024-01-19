@@ -23,6 +23,7 @@ class Tags(str, Enum):
     health_check = "Health Check"
     accounts = "Accounts"
     authentication = "Authentication"
+    access_control = "Access Control"
 
 
 class Versions(str, Enum):

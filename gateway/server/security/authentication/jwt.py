@@ -43,6 +43,7 @@ async def get_jwt(redis: Redis, user: Account) -> TokenCollectionSchema:
         is_active=user.is_active,
         open_id=user.open_id,
         provider=user.provider,
+        scopes=user.scopes,
     )
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)

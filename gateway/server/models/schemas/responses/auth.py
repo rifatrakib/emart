@@ -13,12 +13,12 @@ class TokenUser(BaseSchema):
     is_active: bool
     open_id: Union[str, None] = None
     provider: Union[str, None] = None
+    scopes: list[str] = Field(default_factory=list)
 
 
 class TokenData(TokenUser):
     exp: datetime
     sub: str
-    scopes: list[str] = Field(default_factory=list)
 
 
 class TokenResponseSchema(BaseModel):
