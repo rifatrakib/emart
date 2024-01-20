@@ -107,6 +107,20 @@ class Account(Base):
     def set_birth_date(self, birth_date: str) -> None:
         self._birth_date = birth_date
 
+    @property
+    def scopes(self) -> list[str]:
+        permissions = []
+        for permission in self.permissions:
+            permissions.append(f"{permission.object_name}:{permission.action}")
+        for role in self.roles:
+            for permission in role.permissions:
+                permissions.append(f"{permission.object_name}:{permission.action}")
+        for group in self.groups:
+            for role in group.roles:
+                for permission in role.permissions:
+                    permissions.append(f"{permission.object_name}:{permission.action}")
+        return permissions
+
 
 class RefreshToken(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement="auto")

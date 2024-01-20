@@ -3,27 +3,12 @@ from typing import Union
 
 from pydantic import EmailStr, Field
 
-from server.models.schemas import BaseSchema
+from server.models.schemas.responses import BaseResponseSchema
+from server.models.schemas.responses.access_control import GroupResponse, PermissionResponse, RoleResponse
 from server.utils.enums import Gender
 
 
-class PermissionResponse(BaseSchema):
-    object_name: str
-    action: str
-
-
-class GroupResponse(BaseSchema):
-    title: str
-    roles: list["RoleResponse"] = Field(default_factory=list)
-
-
-class RoleResponse(BaseSchema):
-    title: str
-    groups: list[GroupResponse] = Field(default_factory=list)
-    permissions: list["PermissionResponse"] = Field(default_factory=list)
-
-
-class AccountResponse(BaseSchema):
+class AccountResponse(BaseResponseSchema):
     username: str
     email: EmailStr
     first_name: str
