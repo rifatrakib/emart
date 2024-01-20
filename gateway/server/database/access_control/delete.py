@@ -1,3 +1,5 @@
+from typing import Union
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,7 +31,12 @@ async def delete_role(session: AsyncSession, role_id: int) -> None:
     await session.commit()
 
 
-async def remove_permission_from_role(session: AsyncSession, role_id: int, permission: str) -> Role:
+async def remove_permission_from_role(
+    session: AsyncSession,
+    role_id: int,
+    object_name: Union[str, None] = None,
+    action: Union[str, None] = None,
+) -> Role:
     stmt = select(Role).filter(Role.id == role_id)
     result = await session.execute(stmt)
     role = result.scalar()
@@ -37,8 +44,12 @@ async def remove_permission_from_role(session: AsyncSession, role_id: int, permi
     if not role:
         raise handle_404_not_found("Role not found.")
 
-    object_name, action = permission.split(":")
-    role.permissions = [p for p in role.permissions if p.object_name != object_name and p.action != action]
+    if object_name and action:
+        role.permissions = [p for p in role.permissions if p.object_name != object_name and p.action != action]
+    elif object_name:
+        role.permissions = [p for p in role.permissions if p.object_name != object_name]
+    elif action:
+        role.permissions = [p for p in role.permissions if p.action != action]
 
     await session.flush()
     await session.commit()

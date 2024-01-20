@@ -1,3 +1,5 @@
+from typing import Union
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,7 +55,12 @@ async def update_role(session: AsyncSession, role_id: int, payload: RoleUpdateSc
         raise handle_400_bad_request("Title not unique.")
 
 
-async def add_permission_to_role(session: AsyncSession, role_id: int, permission: str) -> Role:
+async def add_permission_to_role(
+    session: AsyncSession,
+    role_id: int,
+    object_name: Union[str, None] = None,
+    action: Union[str, None] = None,
+) -> Role:
     stmt = select(Role).filter(Role.id == role_id)
     result = await session.execute(stmt)
     role = result.scalar()
@@ -61,12 +68,19 @@ async def add_permission_to_role(session: AsyncSession, role_id: int, permission
     if not role:
         raise handle_404_not_found("Role not found.")
 
-    object_name, action = permission.split(":")
-    stmt = select(Permission).filter(Permission.object_name == object_name, Permission.action == action)
+    if object_name and action:
+        stmt = select(Permission).filter(Permission.object_name == object_name, Permission.action == action)
+    elif object_name:
+        stmt = select(Permission).filter(Permission.object_name == object_name)
+    elif action:
+        stmt = select(Permission).filter(Permission.action == action)
+
     result = await session.execute(stmt)
     permission = result.scalar()
 
-    if not permission:
+    if not permission and not (object_name and action):
+        raise handle_404_not_found("Permission not found.")
+    else:
         permission = Permission(object_name=object_name, action=action)
 
     role.permissions.append(permission)

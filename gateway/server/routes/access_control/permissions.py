@@ -47,6 +47,8 @@ def create_permissions_router() -> APIRouter:
         session: AsyncSession = Depends(get_database_session),
     ) -> PermissionResponse:
         try:
+            if not payload.model_dump(exclude_unset=True):
+                raise handle_422_unprocessable_entity("No fields to update")
             return await update_permissions(session, permission_id, payload)
         except Exception as e:
             raise e

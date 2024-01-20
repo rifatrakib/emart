@@ -14,9 +14,9 @@ async def filter_permissions(
 ) -> list[Permission]:
     stmt = select(Permission).offset((page - 1) * 10).limit(10)
     if role:
-        stmt = stmt.join(Role).filter(Role.title == role)
+        stmt = stmt.join(Permission.roles).filter(Role.title == role)
     elif group:
-        stmt = stmt.join(Role).join(Role.groups).filter(Group.title == group)
+        stmt = stmt.join(Permission.groups).filter(Group.title == group)
 
     result = await session.execute(stmt)
     return result.scalars().unique()

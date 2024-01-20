@@ -61,25 +61,31 @@ def create_roles_router() -> APIRouter:
         except Exception as e:
             raise e
 
-    @router.put("/{role_id}/permissions/{permission}", response_model=RoleResponse)
+    @router.put("/{role_id}/permissions", response_model=RoleResponse)
     async def add_role_permission(
         role_id: int,
-        permission: str,
+        object_name: Union[str, None] = Query(default=None, title="Object Name"),
+        action: Union[str, None] = Query(default=None, title="Action"),
         session: AsyncSession = Depends(get_database_session),
     ) -> RoleResponse:
         try:
-            return await add_permission_to_role(session, role_id, permission)
+            if not object_name or not action:
+                raise handle_422_unprocessable_entity("One of object name and action required")
+            return await add_permission_to_role(session, role_id, object_name, action)
         except Exception as e:
             raise e
 
-    @router.patch("/{role_id}/permissions/{permission}", response_model=RoleResponse)
+    @router.patch("/{role_id}/permissions", response_model=RoleResponse)
     async def revoke_role_permission(
         role_id: int,
-        permission: str,
+        object_name: Union[str, None] = Query(default=None, title="Object Name"),
+        action: Union[str, None] = Query(default=None, title="Action"),
         session: AsyncSession = Depends(get_database_session),
     ) -> RoleResponse:
         try:
-            return await remove_permission_from_role(session, role_id, permission)
+            if not object_name or not action:
+                raise handle_422_unprocessable_entity("One of object name and action required")
+            return await remove_permission_from_role(session, role_id, object_name, action)
         except Exception as e:
             raise e
 
