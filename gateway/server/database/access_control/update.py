@@ -80,7 +80,7 @@ async def add_permission_to_role(
 
     if not permission and not (object_name and action):
         raise handle_404_not_found("Permission not found.")
-    else:
+    elif not permission:
         permission = Permission(object_name=object_name, action=action)
 
     role.permissions.append(permission)

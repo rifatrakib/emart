@@ -45,7 +45,7 @@ async def remove_permission_from_role(
         raise handle_404_not_found("Role not found.")
 
     if object_name and action:
-        role.permissions = [p for p in role.permissions if p.object_name != object_name and p.action != action]
+        role.permissions = [p for p in role.permissions if p.object_name != object_name or p.action != action]
     elif object_name:
         role.permissions = [p for p in role.permissions if p.object_name != object_name]
     elif action:

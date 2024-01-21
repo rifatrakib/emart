@@ -14,6 +14,12 @@ class Group(Base):
         back_populates="groups",
         lazy="joined",
     )
+    permissions: Mapped[list["Permission"]] = relationship(
+        "Permission",
+        secondary="group_permission",
+        back_populates="groups",
+        lazy="joined",
+    )
     accounts: Mapped[list["Account"]] = relationship(
         "Account",
         secondary="group_account",
@@ -63,6 +69,12 @@ class Permission(Base):
         back_populates="permissions",
         lazy="joined",
     )
+    groups: Mapped[list["Group"]] = relationship(
+        "Group",
+        secondary="group_permission",
+        back_populates="permissions",
+        lazy="joined",
+    )
     accounts: Mapped[list["Account"]] = relationship(
         "Account",
         secondary="permission_account",
@@ -103,6 +115,22 @@ class RolePermission(Base):
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(role_id="{self.role_id}", permission_id="{self.permission_id}")'
+
+
+class GroupPermission(Base):
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey(column="group.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        primary_key=True,
+    )
+    permission_id: Mapped[int] = mapped_column(
+        ForeignKey(column="permission.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        primary_key=True,
+    )
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}(group_id="{self.group_id}", permission_id="{self.permission_id}")'
 
 
 class GroupAccount(Base):

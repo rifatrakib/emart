@@ -1,8 +1,8 @@
 """db_v1.
 
-Revision ID: 64eb6a00b583
+Revision ID: 51c15a1a7f5d
 Revises:
-Create Date: 2024-01-11 19:31:18.195206
+Create Date: 2024-01-21 18:15:19.931582
 """
 from typing import Sequence, Union
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "64eb6a00b583"  # pragma: allowlist secret
+revision: str = "51c15a1a7f5d"  # pragma: allowlist secret
 down_revision: Union[str, None] = None  # pragma: allowlist secret
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -83,6 +83,16 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("group_id", "account_id"),
     )
     op.create_table(
+        "group_permission",
+        sa.Column("group_id", sa.Integer(), nullable=False),
+        sa.Column("permission_id", sa.Integer(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
+        sa.ForeignKeyConstraint(["group_id"], ["group.id"], onupdate="CASCADE", ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["permission_id"], ["permission.id"], onupdate="CASCADE", ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("group_id", "permission_id"),
+    )
+    op.create_table(
         "group_role",
         sa.Column("group_id", sa.Integer(), nullable=False),
         sa.Column("role_id", sa.Integer(), nullable=False),
@@ -148,6 +158,7 @@ def downgrade() -> None:
     op.drop_table("refresh_token")
     op.drop_table("permission_account")
     op.drop_table("group_role")
+    op.drop_table("group_permission")
     op.drop_table("group_account")
     op.drop_index(op.f("ix_role_title"), table_name="role")
     op.drop_table("role")

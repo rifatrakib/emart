@@ -30,13 +30,14 @@ def create_roles_router() -> APIRouter:
     async def read_roles(
         page: int = Query(1, ge=1),
         group: Union[str, None] = Query(None),
-        permission: Union[str, None] = Query(None),
+        object_name: Union[str, None] = Query(None),
+        action: Union[str, None] = Query(None),
         session: AsyncSession = Depends(get_database_session),
     ) -> list[RoleResponse]:
         try:
-            if permission and group:
-                raise handle_422_unprocessable_entity("Cannot filter by both permission and group")
-            return await filter_roles(session, page, permission, group)
+            if action and not object_name:
+                raise handle_422_unprocessable_entity("Action requires object name")
+            return await filter_roles(session, page, group, object_name, action)
         except Exception as e:
             raise e
 

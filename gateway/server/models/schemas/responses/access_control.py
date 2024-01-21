@@ -19,3 +19,4 @@ class GroupResponse(BaseResponseSchema):
     id: int
     title: str
     roles: list[RoleResponse] = Field(default_factory=list)
+    permissions: list[PermissionResponse] = Field(default_factory=list)

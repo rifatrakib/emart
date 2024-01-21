@@ -15,19 +15,20 @@ class PermissionUpdateSchema(BaseRequestSchema):
     action: Union[str, None] = None
 
 
-class GroupCreateSchema(BaseRequestSchema):
-    title: str
-    permissions: list[PermissionCreateSchema] = Field(default_factory=list)
-
-
-class GroupUpdateSchema(BaseRequestSchema):
-    title: Union[str, None] = None
-
-
 class RoleCreateSchema(BaseRequestSchema):
     title: str
     permissions: list[PermissionCreateSchema] = Field(default_factory=list)
 
 
 class RoleUpdateSchema(BaseRequestSchema):
+    title: Union[str, None] = None
+
+
+class GroupCreateSchema(BaseRequestSchema):
+    title: str
+    roles: list[RoleCreateSchema] = Field(default_factory=list)
+    permissions: list[PermissionCreateSchema] = Field(default_factory=list)
+
+
+class GroupUpdateSchema(BaseRequestSchema):
     title: Union[str, None] = None
