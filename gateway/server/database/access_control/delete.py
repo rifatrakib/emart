@@ -1,5 +1,3 @@
-from typing import Union
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,12 +29,7 @@ async def delete_role(session: AsyncSession, role_id: int) -> None:
     await session.commit()
 
 
-async def remove_permission_from_role(
-    session: AsyncSession,
-    role_id: int,
-    object_name: Union[str, None] = None,
-    action: Union[str, None] = None,
-) -> Role:
+async def remove_permission_from_role(session: AsyncSession, role_id: int, permission_id: int) -> Role:
     stmt = select(Role).filter(Role.id == role_id)
     result = await session.execute(stmt)
     role = result.scalar()
@@ -44,17 +37,14 @@ async def remove_permission_from_role(
     if not role:
         raise handle_404_not_found("Role not found.")
 
-    if object_name and action:
-        role.permissions = [p for p in role.permissions if p.object_name != object_name or p.action != action]
-    elif object_name:
-        role.permissions = [p for p in role.permissions if p.object_name != object_name]
-    elif action:
-        role.permissions = [p for p in role.permissions if p.action != action]
+    for permission in role.permissions:
+        if permission.id == permission_id:
+            role.permissions.remove(permission)
+            await session.commit()
+            await session.refresh(role)
+            return role
 
-    await session.flush()
-    await session.commit()
-    await session.refresh(role)
-    return role
+    raise handle_404_not_found("Permission not found.")
 
 
 async def delete_group(session: AsyncSession, group_id: int) -> None:
@@ -67,3 +57,39 @@ async def delete_group(session: AsyncSession, group_id: int) -> None:
 
     await session.delete(group)
     await session.commit()
+
+
+async def remove_role_from_group(session: AsyncSession, group_id: int, role_id: int) -> Group:
+    stmt = select(Group).filter(Group.id == group_id)
+    result = await session.execute(stmt)
+    group = result.scalar()
+
+    if not group:
+        raise handle_404_not_found("Group not found.")
+
+    for role in group.roles:
+        if role.id == role_id:
+            group.roles.remove(role)
+            await session.commit()
+            await session.refresh(group)
+            return group
+
+    raise handle_404_not_found("Role not found.")
+
+
+async def remove_permission_from_group(session: AsyncSession, group_id: int, permission_id: int) -> Group:
+    stmt = select(Group).filter(Group.id == group_id)
+    result = await session.execute(stmt)
+    group = result.scalar()
+
+    if not group:
+        raise handle_404_not_found("Group not found.")
+
+    for permission in group.permissions:
+        if permission.id == permission_id:
+            group.permissions.remove(permission)
+            await session.commit()
+            await session.refresh(group)
+            return group
+
+    raise handle_404_not_found("Permission not found.")

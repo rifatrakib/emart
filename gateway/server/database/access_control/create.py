@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.database.access_control.read import read_permission, read_role
+from server.database.access_control.read import read_permissions, read_roles
 from server.models.database.acl import Group, Permission, Role
 from server.models.schemas.requests.access_control import GroupCreateSchema, PermissionCreateSchema, RoleCreateSchema
 
@@ -31,13 +31,10 @@ async def create_permission(session: AsyncSession, payload: PermissionCreateSche
 
 async def create_role(session: AsyncSession, payload: RoleCreateSchema) -> Role:
     role = Role(title=payload.title)
-
-    for permission in payload.permissions:
-        existing_permission = await read_permission(session, permission)
-        if existing_permission:
-            role.permissions.append(existing_permission)
-        else:
-            role.permissions.append(Permission(**permission.model_dump()))
+    permissions = {f"{p.object_name}-{p.action}": Permission(**p.model_dump()) for p in payload.permissions}
+    existing_permissions = await read_permissions(session, payload.permissions)
+    permissions.update({f"{p.object_name}-{p.action}": p for p in existing_permissions})
+    role.permissions.extend(permissions.values())
 
     session.add(role)
     await session.commit()
@@ -47,27 +44,30 @@ async def create_role(session: AsyncSession, payload: RoleCreateSchema) -> Role:
 
 async def create_group(session: AsyncSession, payload: GroupCreateSchema) -> Group:
     group = Group(title=payload.title)
+    roles = {r.title: Role(title=r.title) for r in payload.roles}
+    permissions = {f"{p.object_name}-{p.action}": Permission(**p.model_dump()) for p in payload.permissions}
+
+    existing_roles = await read_roles(session, payload.roles)
+    roles.update({r.title: r for r in existing_roles})
+    permissions.update({f"{p.object_name}-{p.action}": p for role in existing_roles for p in role.permissions})
 
     for role in payload.roles:
-        existing_role = await read_role(session, role)
-        if existing_role:
-            group.roles.append(existing_role)
-        else:
-            new_role = Role(title=role.title)
-            for permission in role.permissions:
-                existing_permission = await read_permission(session, permission)
-                if existing_permission:
-                    new_role.permissions.append(existing_permission)
-                else:
-                    new_role.permissions.append(Permission(**permission.model_dump()))
-            group.roles.append(new_role)
+        permissions.update({f"{p.object_name}-{p.action}": Permission(**p.model_dump()) for p in role.permissions})
+
+    existing_permissions = await read_permissions(session, list(permissions.values()))
+    permissions.update({f"{p.object_name}-{p.action}": p for p in existing_permissions})
+
+    new_permissions = [p for p in permissions.values() if p not in existing_permissions]
+    session.add_all(new_permissions)
+    await session.commit()
+    permissions.update({f"{p.object_name}-{p.action}": p for p in new_permissions})
+
+    for role in payload.roles:
+        roles[role.title].permissions.extend([permissions[f"{p.object_name}-{p.action}"] for p in role.permissions])
+        group.roles.append(roles[role.title])
 
     for permission in payload.permissions:
-        existing_permission = await read_permission(session, permission)
-        if existing_permission:
-            group.permissions.append(existing_permission)
-        else:
-            group.permissions.append(Permission(**permission.model_dump()))
+        group.permissions.append(permissions[f"{permission.object_name}-{permission.action}"])
 
     session.add(group)
     await session.commit()

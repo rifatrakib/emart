@@ -1,6 +1,6 @@
 from typing import Union
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.models.database.acl import Group, Permission, Role
@@ -109,19 +109,29 @@ async def filter_groups(
     return result.scalars().unique()
 
 
-async def read_permission(
+async def read_permissions(
     session: AsyncSession,
-    permission: PermissionCreateSchema,
-) -> Permission:
-    stmt = select(Permission).filter(
-        Permission.object_name == permission.object_name,
-        Permission.action == permission.action,
-    )
+    permissions: list[PermissionCreateSchema],
+) -> list[Permission]:
+    filters = []
+    for permission in permissions:
+        filters.append(
+            and_(
+                Permission.object_name == permission.object_name,
+                Permission.action == permission.action,
+            )
+        )
+
+    stmt = select(Permission).filter(or_(*filters))
     result = await session.execute(stmt)
-    return result.scalar()
+    return result.scalars().unique()
 
 
-async def read_role(session: AsyncSession, role: RoleCreateSchema) -> Role:
-    stmt = select(Role).where(Role.title == role.title)
+async def read_roles(session: AsyncSession, roles: list[RoleCreateSchema]) -> list[Role]:
+    filters = []
+    for role in roles:
+        filters.append(Role.title == role.title)
+
+    stmt = select(Role).where(or_(*filters))
     result = await session.execute(stmt)
     return result.scalars().unique()
