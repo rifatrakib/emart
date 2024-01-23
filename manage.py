@@ -40,26 +40,26 @@ def deploy(mode: Union[str, None] = "development"):
         if mode not in Modes.__members__.values():
             raise KeyError
 
-        with open("auth/.env", "w") as writer:
+        with open("gateway/.env", "w") as writer:
             writer.write(f"MODE={mode}")
 
-        with open(f"auth/secrets/{mode}.json") as reader:
+        with open(f"gateway/secrets/{mode}.json") as reader:
             secrets = json.loads(reader.read())
 
-        with open(".env.elk-apm", "w") as writer:
-            apm_secrets = ElasticAPMConfig.model_validate(secrets)
-            for key, value in apm_secrets.model_dump().items():
-                writer.write(f"{key}={value}\n")
+        # with open(".env.elk-apm", "w") as writer:
+        #     apm_secrets = ElasticAPMConfig.model_validate(secrets)
+        #     for key, value in apm_secrets.model_dump().items():
+        #         writer.write(f"{key}={value}\n")
 
-        with open("auth/.env.postgres", "w") as writer:
+        with open("gateway/.env.postgres", "w") as writer:
             pg_secrets = PostgresConfig.model_validate(secrets)
             for key, value in pg_secrets.model_dump().items():
                 writer.write(f"{key}={value}\n")
 
-        with open("auth/.env.pgadmin", "w") as writer:
-            pgadmin_secrets = PGAdminConfig.model_validate(secrets)
-            for key, value in pgadmin_secrets.model_dump().items():
-                writer.write(f"{key}={value}\n")
+        # with open("gateway/.env.pgadmin", "w") as writer:
+        #     pgadmin_secrets = PGAdminConfig.model_validate(secrets)
+        #     for key, value in pgadmin_secrets.model_dump().items():
+        #         writer.write(f"{key}={value}\n")
 
         subprocess.run("docker compose up --build")
     except KeyError:
