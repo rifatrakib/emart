@@ -5,6 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from server.models.database import Base
 from server.models.database.acl import Group, Permission, Role
+from server.models.database.shops import Shop
 from server.utils.enums import Gender, Provider
 
 
@@ -48,6 +49,11 @@ class Account(Base):
         secondary="permission_account",
         back_populates="accounts",
         lazy="joined",
+    )
+    shops: Mapped[Shop] = relationship(
+        Shop,
+        back_populates="owner",
+        uselist=True,
     )
 
     def __repr__(self) -> str:
