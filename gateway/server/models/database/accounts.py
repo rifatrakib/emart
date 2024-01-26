@@ -52,7 +52,7 @@ class Account(Base):
     )
     shops: Mapped[Shop] = relationship(
         Shop,
-        back_populates="owner",
+        back_populates="merchant",
         uselist=True,
     )
 

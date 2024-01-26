@@ -15,13 +15,13 @@ class Shop(Base):
     links: Mapped[dict] = mapped_column(JSON, nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
 
-    owner_id: Mapped[int] = mapped_column(
+    merchant_id: Mapped[int] = mapped_column(
         ForeignKey("account.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
         index=True,
     )
 
-    owner: Mapped["Account"] = relationship(
+    merchant: Mapped["Account"] = relationship(
         "Account",
         back_populates="shops",
         uselist=False,
