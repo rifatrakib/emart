@@ -49,6 +49,11 @@ class Account(Base):
         back_populates="accounts",
         lazy="joined",
     )
+    applications: Mapped[list["Application"]] = relationship(
+        "Application",
+        back_populates="app_owner",
+        uselist=True,
+    )
 
     def __repr__(self) -> str:
         return f"<Account(username={self.username}, email={self.email}>"
@@ -142,3 +147,26 @@ class RefreshToken(Base):
 
     def __repr__(self) -> str:
         return f"<RefreshToken(account_id={self.account_id}>"
+
+
+class Application(Base):
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement="auto")
+    client_id: Mapped[str] = mapped_column(String(length=128), nullable=False, unique=True)
+    secret_key: Mapped[str] = mapped_column(String(length=128), nullable=False, unique=True)
+    callback_url: Mapped[str] = mapped_column(String(length=256), nullable=False)
+
+    app_owner_id: Mapped[int] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    app_owner: Mapped[Account] = relationship(
+        Account,
+        back_populates="applications",
+        uselist=False,
+        innerjoin=True,
+    )
+
+    def __repr__(self) -> str:
+        return f"<Application(client_id={self.client_id}>"
