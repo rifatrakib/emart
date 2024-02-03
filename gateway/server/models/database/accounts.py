@@ -151,6 +151,7 @@ class RefreshToken(Base):
 
 class Application(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement="auto")
+    name: Mapped[str] = mapped_column(String(length=256), nullable=False)
     client_id: Mapped[str] = mapped_column(String(length=128), nullable=False, unique=True)
     secret_key: Mapped[str] = mapped_column(String(length=128), nullable=False, unique=True)
     callback_url: Mapped[str] = mapped_column(String(length=256), nullable=False)
