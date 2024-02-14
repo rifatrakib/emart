@@ -48,20 +48,6 @@ services:
       - auth-db
       - auth-cache
 
-  shop-api:
-    container_name: shop-api
-    build:
-      context: ./shop
-    working_dir: /shop
-    command: npm start
-    ports:
-      - "5000:5000"
-    restart: on-failure
-    volumes:
-      - ./shop:/shop
-    networks:
-      - private_network
-
 volumes:
   pgdata:
   redisdata:
