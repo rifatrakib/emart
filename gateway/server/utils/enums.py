@@ -24,6 +24,7 @@ class Tags(str, Enum):
     accounts = "Accounts"
     authentication = "Authentication"
     access_control = "Access Control"
+    application = "Application"
 
 
 class Versions(str, Enum):
