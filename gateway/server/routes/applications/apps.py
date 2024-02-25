@@ -1,12 +1,13 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.connections.clients import get_database_session
 from server.database.applications.create import create_new_application
+from server.database.applications.delete import delete_application
 from server.database.applications.read import read_applications
-from server.database.applications.update import update_application
+from server.database.applications.update import regenerate_secrets, update_application
 from server.models.schemas.requests.applications import ApplicationCreateSchema, ApplicationUpdateSchema
 from server.models.schemas.responses import MessageResponseSchema
 from server.models.schemas.responses.applications import ApplicationResponse
@@ -59,6 +60,29 @@ def create_oauth_applications_router() -> APIRouter:
                 raise handle_422_unprocessable_entity("No data to update.")
             app = await update_application(session, app_id, user.id, payload)
             return app
+        except Exception as e:
+            raise e
+
+    @router.patch("/{app_id}/regenerate", response_model=ApplicationResponse)
+    async def regenerate_oauth_app_secrets(
+        app_id: int,
+        user: TokenUser = Depends(authenticate_active_user),
+        session: AsyncSession = Depends(get_database_session),
+    ) -> ApplicationResponse:
+        try:
+            app = await regenerate_secrets(session, app_id, user.id)
+            return app
+        except Exception as e:
+            raise e
+
+    @router.delete("/{app_id}", status_code=status.HTTP_204_NO_CONTENT)
+    async def delete_oauth_application(
+        app_id: int,
+        user: TokenUser = Depends(authenticate_active_user),
+        session: AsyncSession = Depends(get_database_session),
+    ) -> None:
+        try:
+            await delete_application(session, app_id, user.id)
         except Exception as e:
             raise e
 
