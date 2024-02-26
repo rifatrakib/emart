@@ -68,3 +68,14 @@ async def read_tokens(session: AsyncSession, access_token: str) -> RefreshToken:
     query = await session.execute(stmt)
     token = query.scalar()
     return token
+
+
+async def read_account_by_access_token(session: AsyncSession, access_token: str) -> Account:
+    stmt = select(Account).join(RefreshToken).where(RefreshToken.access_token == access_token)
+    query = await session.execute(stmt)
+    user = query.scalar()
+
+    if not user:
+        raise handle_404_not_found(msg="Account not found.")
+
+    return user
