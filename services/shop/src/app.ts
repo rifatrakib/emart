@@ -1,12 +1,12 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import config from './config/env';
 
-const app = express();
-const PORT = 3000;
+import { healthCheck } from './routes/health';
 
-app.get('/health', (req: Request, res: Response) => {
-    res.json({ status: 'OK' });
-});
+const app: express.Application = express();
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.get('/health', healthCheck);
+
+app.listen(config.PORT, () => {
+    console.log(`Server is running on port ${config.PORT}`);
 });
