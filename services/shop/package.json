@@ -1,11 +1,13 @@
 {
-  "name": "server",
+  "name": "shop",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "dist/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon main.ts"
+    "start": "node dist/app.js",
+    "dev": "nodemon src/app.ts",
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0",
+    "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
