@@ -4,10 +4,12 @@
   "description": "",
   "main": "dist/app.js",
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "node dist/src/app.js",
     "dev": "nodemon src/app.ts",
     "clean": "rimraf dist",
-    "build": "npm run clean && tsc"
+    "build": "npm run clean && tsc",
+    "generate": "npx tsoa spec && npx tsoa routes",
+    "deploy": "npm run generate && npm run build && npm start"
   },
   "keywords": [],
   "author": "",
@@ -19,9 +21,11 @@
     "express": "^4.18.3"
   },
   "devDependencies": {
+    "@types/swagger-ui-express": "^4.1.6",
     "nodemon": "^3.1.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
+    "tsoa": "^6.0.1",
     "typescript": "^5.3.3"
   }
 }
