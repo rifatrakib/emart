@@ -51,4 +51,46 @@ export class ShopService {
             await prisma.$disconnect();
         }
     }
+
+    public async readMany(name?: string, merchantId?: number, page?: number): Promise<Shop[]> {
+        const prisma = new PrismaClient();
+
+        try {
+            let query = {};
+            if (name) {
+                query = { ...query, name: name };
+            }
+            if (merchantId) {
+                query = { ...query, merchant_id: merchantId };
+            }
+
+            const records = await prisma.shops.findMany({
+                where: query,
+                skip: page ? (page - 1) * 10 : 0,
+                take: 10,
+            });
+
+            return records as Shop[];
+        } catch (error: any) {
+            throw new Error(`Error reading shops: ${error}`);
+        } finally {
+            await prisma.$disconnect();
+        }
+    }
+
+    public async readOne(shopId: number) {
+        const prisma = new PrismaClient();
+
+        try {
+            const record = await prisma.shops.findUnique({
+                where: { shop_id: shopId },
+            });
+
+            return record as Shop;
+        } catch (error: any) {
+            throw new Error(`Error reading shop: ${error}`);
+        } finally {
+            await prisma.$disconnect();
+        }
+    }
 }

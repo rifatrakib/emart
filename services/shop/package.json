@@ -7,9 +7,9 @@
     "start": "node dist/src/app.js",
     "dev": "nodemon src/app.ts",
     "clean": "rimraf dist",
-    "build": "npm run clean && tsc",
     "generate": "npx tsoa spec && npx tsoa routes",
-    "deploy": "npm run generate && npm run build && npm start"
+    "build": "npm run generate && npm run clean && tsc",
+    "deploy": "npm run build && npm start"
   },
   "keywords": [],
   "author": "",
