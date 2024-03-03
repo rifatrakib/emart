@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query, Route, SuccessResponse } from 'tsoa';
-import { Shop } from '../controllers/schemas/shop';
-import { ShopCreateParams, ShopService } from '../controllers/services/shop';
+import { Shop, ShopCreateParams } from '../controllers/schemas/shop';
+import { ShopService } from '../controllers/services/shop';
 
 @Route('shops')
 export class ShopController extends Controller {

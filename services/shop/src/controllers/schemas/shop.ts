@@ -1,6 +1,4 @@
-export interface Shop {
-    id: string;
-    shop_id: number;
+export interface ShopCreateParams {
     name: string;
     merchant_id: number;
     address: string | null;
@@ -10,6 +8,16 @@ export interface Shop {
     phone_number: string;
     website: string | null;
     metadata: any;
-    created_at: Date;
-    updated_at: Date | null;
+}
+
+export interface Shop {
+    shop_id: number;
+    name: string;
+    merchant_id: number;
+    address: string | null;
+    description: string | null;
+    email: string;
+    phone_number: string;
+    website: string | null;
+    metadata: any;
 }

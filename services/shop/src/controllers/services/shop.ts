@@ -1,8 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-import { Shop } from '../schemas/shop';
-
-export type ShopCreateParams = Pick<Shop, 'name' | 'merchant_id' | 'address' | 'description' | 'account_number' | 'email' | 'phone_number' | 'website' | 'metadata'>;
+import { Shop, ShopCreateParams } from '../schemas/shop';
 
 export class ShopService {
     public async create(params: ShopCreateParams): Promise<Shop> {
@@ -26,18 +24,7 @@ export class ShopService {
             }
 
             const newRecord = await prisma.shops.create({
-                data: {
-                    shop_id: nextId,
-                    name: params.name,
-                    merchant_id: params.merchant_id,
-                    address: params.address,
-                    description: params.description,
-                    account_number: params.account_number,
-                    email: params.email,
-                    phone_number: params.phone_number,
-                    website: params.website,
-                    metadata: params.metadata,
-                },
+                data: { ...params, shop_id: nextId },
             });
 
             await prisma.sequences.update({
