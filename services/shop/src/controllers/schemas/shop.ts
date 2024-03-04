@@ -7,7 +7,20 @@ export interface ShopCreateParams {
     email: string;
     phone_number: string;
     website: string | null;
-    metadata: any;
+    metadata: any | null;
+}
+
+export interface ShopUpdateParams {
+    name?: string;
+    merchant_id?: number;
+    address?: string | null;
+    description?: string | null;
+    account_number?: string;
+    email?: string;
+    phone_number?: string;
+    website?: string | null;
+    metadata?: any | null;
+    set_fields: string[];
 }
 
 export interface Shop {

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-import { Shop, ShopCreateParams } from '../schemas/shop';
+import { Shop, ShopCreateParams, ShopUpdateParams } from '../schemas/shop';
 
 export class ShopService {
     public async create(params: ShopCreateParams): Promise<Shop> {
@@ -76,6 +76,29 @@ export class ShopService {
             return record as Shop;
         } catch (error: any) {
             throw new Error(`Error reading shop: ${error}`);
+        } finally {
+            await prisma.$disconnect();
+        }
+    }
+
+    public async updateOne(shopId: number, data: ShopUpdateParams) {
+        const prisma = new PrismaClient();
+        let updateData: Record<string, any> = {};
+        data.set_fields.forEach((field) => {
+            if (field in data) {
+                updateData[field] = data[field as keyof ShopUpdateParams];
+            }
+        });
+
+        try {
+            const record = await prisma.shops.update({
+                where: { shop_id: shopId },
+                data: { ...updateData, updated_at: new Date()},
+            });
+
+            return record as Shop;
+        } catch (error: any) {
+            throw new Error(`Error updating shop: ${error}`);
         } finally {
             await prisma.$disconnect();
         }

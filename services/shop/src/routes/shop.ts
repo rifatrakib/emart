@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Post, Query, Route, SuccessResponse } from 'tsoa';
-import { Shop, ShopCreateParams } from '../controllers/schemas/shop';
+import { Body, Controller, Get, Patch, Post, Query, Route, SuccessResponse } from 'tsoa';
+import { Shop, ShopCreateParams, ShopUpdateParams } from '../controllers/schemas/shop';
 import { ShopService } from '../controllers/services/shop';
 
 @Route('shops')
@@ -26,5 +26,13 @@ export class ShopController extends Controller {
         shopId: number,
     ): Promise<Shop> {
         return await new ShopService().readOne(shopId);
+    }
+
+    @Patch('{shopId}')
+    public async updateShop(
+        shopId: number,
+        @Body() body: ShopUpdateParams,
+    ): Promise<Shop> {
+        return await new ShopService().updateOne(shopId, body);
     }
 }
