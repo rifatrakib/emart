@@ -1,34 +1,25 @@
 {
-  "name": "shop",
+  "name": "shop-api",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/app.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node dist/src/app.js",
-    "dev": "nodemon src/app.ts",
-    "clean": "rimraf dist",
-    "generate": "npx tsoa spec && npx tsoa routes",
-    "build": "npm run generate && npm run clean && tsc",
-    "deploy": "npm run build && npm start"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "node ./build/index.js",
+    "start": "tsc && npm run dev"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@prisma/client": "^5.10.2",
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.11.24",
-    "dotenv": "^16.4.5",
-    "express": "^4.18.3",
-    "swagger-ui-express": "^5.0.0"
-  },
   "devDependencies": {
-    "@types/swagger-ui-express": "^4.1.6",
-    "nodemon": "^3.1.0",
-    "prisma": "^5.10.2",
-    "rimraf": "^5.0.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.8",
     "ts-node": "^10.9.2",
-    "tsoa": "^6.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   }
 }
