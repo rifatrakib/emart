@@ -1,25 +1,20 @@
 import express, { Request, Response, Router } from 'express';
-import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { z } from 'zod';
 
-import { healthResponseSchema } from '../docs/schemas';
-import { handle200Response } from '../utils/response';
-
-export const healthRegistry = new OpenAPIRegistry();
+import { validateHealthResponse } from '../utils/responses';
+import { AppConfig } from '../interfaces/config';
+import { parseConfig } from '../config/parse';
 
 export const healthRouter: Router = ((): Router => {
     const router: Router = express.Router();
-
-    healthRegistry.registerPath({
-        method: 'get',
-        path: '/health',
-        tags: ['Health Check'],
-        responses: healthResponseSchema(z.null(), 'Health Check', 200),
-    })
+    const appConfig: AppConfig = parseConfig();
 
     router.get('', (req: Request, res: Response) => {
-        let response = handle200Response({status: 'ok'});
-        res.status(response.statusCode).json(response.body);
+        const result = validateHealthResponse({
+            status: 'ok',
+            port: appConfig.port,
+            app: appConfig.app,
+        });
+        res.status(200).json(result);
     });
 
     return router;
