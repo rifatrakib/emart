@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import Joi from 'joi';
 
-export const healthSchema = z.object({
-    status: z.string(),
-    port: z.number(),
-    app: z.string(),
+export const healthSchema = Joi.object({
+    status: Joi.string().required(),
+    port: Joi.number().required(),
+    app: Joi.string().required(),
 });

@@ -1,14 +1,11 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 
-import { AppConfig } from './interfaces/config';
-import { parseConfig } from './config/parse';
+import { appConfig } from './config/parse';
 import { healthRouter } from './routes/health';
 import { shopRouter } from './routes/shop';
 
 const app: Application = express();
-
-const appConfig: AppConfig = parseConfig();
 
 app.use(cors(appConfig.corsOptions));
 app.use(express.json());

@@ -10,3 +10,5 @@ export const parseConfig = (): AppConfig => {
         corsOptions: config.corsOptions
     };
 };
+
+export const appConfig: AppConfig = parseConfig();
