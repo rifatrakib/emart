@@ -8,7 +8,7 @@ interface Address {
     postalCode?: string;
 }
 
-export interface Shop extends Document {
+export interface IShop extends Document {
     name: string;
     registrationNumber: string;
     address: Address;
