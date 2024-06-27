@@ -1,7 +1,8 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import { Schema, Model } from 'mongoose';
 
-import { IShop } from '../../interfaces/shop';
 import { mongoUri } from '../../config/parse';
+import { IShop } from '../../interfaces/shop';
+import { getDbConnection } from '../../config/db';
 
 const shopSchema = new Schema<IShop>({
     name: { type: String, required: true },
@@ -9,6 +10,7 @@ const shopSchema = new Schema<IShop>({
     address: { type: Object, required: true },
     logo: { type: String, required: true },
     description: { type: String },
+    ownerAccountId: { type: Number, required: true },
     accountNumber: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     email: { type: String, required: true },
@@ -21,6 +23,6 @@ shopSchema.index({ name: 'text' });
 shopSchema.index({ 'address.city': 1 });
 shopSchema.index({ 'address.country': 1 });
 
-const conn = mongoose.createConnection(`${mongoUri}/EMartShops`);
+const conn = getDbConnection(`${mongoUri}/EMartShops`);
 
 export const Shop: Model<IShop> = conn.model('shops', shopSchema);

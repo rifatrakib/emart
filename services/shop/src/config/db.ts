@@ -1,11 +1,9 @@
 import mongoose, { Error } from 'mongoose';
 
-import { mongoUri } from './parse';
-
 mongoose.set('strictQuery', true);
 
-export const connectDb = async () => {
-    const conn = mongoose.createConnection(mongoUri);
+export const getDbConnection = (uri: string) => {
+    const conn = mongoose.createConnection(uri);
 
     conn.on('connected', () => console.log('Connected to MongoDB'));
     conn.on('open', () => console.log('MongoDB connection opened'));

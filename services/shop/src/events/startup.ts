@@ -1,8 +1,9 @@
-import { connectDb } from '../config/db';
+import { getDbConnection } from '../config/db';
+import { mongoUri } from '../config/parse';
 
 export const initDb = async () => {
     try {
-        await connectDb();
+        getDbConnection(mongoUri);
         console.log('MongoDB database connection established successfully.');
     } catch (error) {
         console.error(`Error connecting to MongoDB: ${error}`);

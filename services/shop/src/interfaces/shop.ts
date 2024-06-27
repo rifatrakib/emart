@@ -14,6 +14,7 @@ export interface IShop extends Document {
     address: Address;
     logo: string;
     description?: string;
+    ownerAccountId: number;
     accountNumber: string;
     phoneNumber: string;
     email: string;
