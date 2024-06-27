@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createShop } from '../repositories/shop';
+import { createShop, fetchShopById } from '../repositories/shop';
 import { validator } from '../middlewares/validators';
 import { ShopResponse } from '../models/schemas/responses/shop';
 
@@ -13,8 +13,28 @@ export const createNewShop = async (req: Request, res: Response) => {
     newShop.id = newShop._id?.toString();
     const result = await validator(ShopResponse, newShop);
     if (!result.isValid) {
-        return res.status(400).json({ details: result.error?.details });
+        return res.status(422).json({ details: result.error?.details });
     }
 
     res.status(201).json({ message: 'Shop created', data: newShop });
+}
+
+export const readShopById = async (req: Request, res: Response) => {
+    const shopId = req.params.id;
+    if (!shopId) {
+        return res.status(400).json({ message: 'Shop id is required' });
+    }
+
+    const shop = await fetchShopById(shopId);
+    if (!shop) {
+        return res.status(404).json({ message: 'Shop not found' });
+    }
+
+    shop.id = shop._id?.toString();
+    const result = await validator(ShopResponse, shop);
+    if (!result.isValid) {
+        return res.status(422).json({ details: result.error?.details });
+    }
+
+    res.status(200).json({ message: 'Shop found', data: shop });
 }

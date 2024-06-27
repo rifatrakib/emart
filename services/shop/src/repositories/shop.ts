@@ -5,3 +5,7 @@ export const createShop = async (ownerAccountId: number, payload: object) => {
     await newShop.save();
     return newShop;
 };
+
+export const fetchShopById = async (shopId: string) => {
+    return await Shop.findById(shopId);
+};
