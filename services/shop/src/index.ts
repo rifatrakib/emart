@@ -5,6 +5,7 @@ import { appConfig } from './config/parse';
 import { initDb } from './events/startup';
 import { healthRouter } from './routes/health';
 import { shopRouter } from './routes/shop';
+import { logger } from './middlewares/logger';
 
 const startServer = async () => {
     const app: Application = express();
@@ -12,6 +13,7 @@ const startServer = async () => {
     app.use(cors(appConfig.corsOptions));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+    app.use(logger);
 
     app.use('/health', healthRouter);
     app.use('/shops', shopRouter);
