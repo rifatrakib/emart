@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 
-import { createNewShop, readShopById } from '../controllers/shop';
+import { createNewShop, readShopById, readShopsByOwnerAccountId } from '../controllers/shop';
 import { shopCreateRequest } from '../middlewares/shop';
 
 export const shopRouter: Router = ((): Router => {
@@ -8,6 +8,7 @@ export const shopRouter: Router = ((): Router => {
 
     router.post('', shopCreateRequest, createNewShop);
     router.get('/:id', readShopById);
+    router.get('/owners/:id', readShopsByOwnerAccountId);
 
     return router;
 })();

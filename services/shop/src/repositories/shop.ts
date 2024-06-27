@@ -9,3 +9,7 @@ export const createShop = async (ownerAccountId: number, payload: object) => {
 export const fetchShopById = async (shopId: string) => {
     return await Shop.findById(shopId);
 };
+
+export const fetchShopsByOwnerAccountId = async (ownerAccountId: string) => {
+    return await Shop.find({ ownerAccountId });
+}
