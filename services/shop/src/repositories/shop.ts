@@ -7,9 +7,29 @@ export const createShop = async (ownerAccountId: number, payload: object) => {
     return newShop;
 };
 
-export const fetchShops = async (page: number, term: string) => {
-    return await Shop.find({ $text: { $search: `\"${term}\"` } })
-        .sort({ textScore: { $meta: 'textScore' }})
+export const fetchShops = async (term: string | null, country: string | null, city: string | null, ownerAccountId: number | null, page: number) => {
+    let query = {};
+    let sortQuery = {};
+
+    if (term) {
+        query = { $text: { $search: `\"${term}\"` } };
+        sortQuery = { textScore: { $meta: 'textScore' }};
+    } else {
+        sortQuery = { createdAt: -1 };
+    }
+
+    if (country) {
+        query = { ...query, 'address.country': country };
+    }
+    if (city) {
+        query = { ...query, 'address.city': city };
+    }
+    if (ownerAccountId) {
+        query = { ...query, ownerAccountId };
+    }
+
+    return await Shop.find(query)
+        .sort(sortQuery)
         .skip((page - 1) * appConfig.pageSize)
         .limit(appConfig.pageSize);
 };
@@ -17,11 +37,3 @@ export const fetchShops = async (page: number, term: string) => {
 export const fetchShopById = async (shopId: string) => {
     return await Shop.findById(shopId);
 };
-
-export const fetchShopsByOwnerAccountId = async (ownerAccountId: string, page: number, sortDirection: string) => {
-    const direction = sortDirection === 'asc' ? 1 : -1;
-    return await Shop.find({ ownerAccountId })
-        .skip((page - 1) * appConfig.pageSize)
-        .limit(appConfig.pageSize)
-        .sort({ createdAt: direction });
-}

@@ -20,6 +20,7 @@ const shopSchema = new Schema<IShop>({
     lastUpdatedAt: { type: Date, default: Date.now },
 });
 shopSchema.index({ name: 'text' });
+shopSchema.index({ ownerAccountId: 1 });
 shopSchema.index({ 'address.city': 1 });
 shopSchema.index({ 'address.country': 1 });
 
