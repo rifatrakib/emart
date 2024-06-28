@@ -7,6 +7,7 @@ export const parseConfig = (): AppConfig => {
         app: process.env.APP_NAME || config.app,
         env: process.env.NODE_ENV || config.env,
         port: process.env.PORT || config.port,
+        pageSize: process.env.PAGE_SIZE || config.pageSize,
         mongodbConfig: {
             username: process.env.MONGO_USERNAME || config.mongodbConfig.username,
             password: process.env.MONGO_PASSWORD || config.mongodbConfig.password,

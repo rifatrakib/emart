@@ -11,6 +11,7 @@ export interface AppConfig {
     app: string;
     env: string;
     port: number;
+    pageSize: number;
     mongodbConfig: DbConfig;
     corsOptions: CorsOptions;
 }
