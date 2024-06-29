@@ -18,3 +18,22 @@ export const ShopCreateRequest = Joi.object({
     additionalInformation: Joi.object(),
     metadata: Joi.object(),
 });
+
+export const ShopUpdateRequest = Joi.object({
+    name: Joi.string().optional(),
+    registrationNumber: Joi.string().optional(),
+    address: Joi.object({
+        street: Joi.string().optional(),
+        city: Joi.string().optional(),
+        state: Joi.string().optional(),
+        country: Joi.string().optional(),
+        postalCode: Joi.string().optional(),
+    }).optional(),
+    logo: Joi.string().optional(),
+    description: Joi.string().optional(),
+    accountNumber: Joi.string().optional(),
+    phoneNumber: Joi.string().optional(),
+    email: Joi.string().email().optional(),
+    additionalInformation: Joi.object().optional(),
+    metadata: Joi.object().optional(),
+});

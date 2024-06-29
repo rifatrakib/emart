@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createShop, fetchShops, fetchShopById } from '../repositories/shop';
+import { createShop, fetchShops, fetchShopById, updateShop } from '../repositories/shop';
 import { validator } from '../middlewares/validators';
 import { ShopResponse } from '../models/schemas/responses/shop';
 
@@ -59,4 +59,25 @@ export const readShopById = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({ message: 'Shop found', data: shop });
+};
+
+export const updateSingleShop = async (req: Request, res: Response) => {
+    const shopId = req.params.id;
+    if (!shopId) {
+        return res.status(400).json({ message: 'Shop id is required' });
+    }
+
+    console.log(req.body);
+    const updatedShop = await updateShop(shopId, req.body);
+    if (!updatedShop) {
+        return res.status(404).json({ message: 'Shop not found' });
+    }
+
+    updatedShop.id = updatedShop._id?.toString();
+    const result = await validator(ShopResponse, updatedShop);
+    if (!result.isValid) {
+        return res.status(422).json({ details: result.error?.details });
+    }
+
+    res.status(200).json({ message: 'Shop updated', data: updatedShop });
 };

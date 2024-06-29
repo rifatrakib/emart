@@ -37,3 +37,8 @@ export const fetchShops = async (term: string | null, country: string | null, ci
 export const fetchShopById = async (shopId: string) => {
     return await Shop.findById(shopId);
 };
+
+export const updateShop = async (shopId: string, payload: object) => {
+    let data = { ...payload, lastUpdatedAt: new Date() };
+    return await Shop.findByIdAndUpdate(shopId, data, { new: true });
+}

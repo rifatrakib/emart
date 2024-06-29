@@ -1,7 +1,7 @@
 import express, { Router } from 'express';
 
-import { createNewShop, readShopById, readShops } from '../controllers/shop';
-import { shopCreateRequest } from '../middlewares/shop';
+import { createNewShop, readShopById, readShops, updateSingleShop } from '../controllers/shop';
+import { shopCreateRequest, shopUpdateRequest } from '../middlewares/shop';
 
 export const shopRouter: Router = ((): Router => {
     const router: Router = express.Router();
@@ -9,6 +9,7 @@ export const shopRouter: Router = ((): Router => {
     router.post('', shopCreateRequest, createNewShop);
     router.get('', readShops);
     router.get('/:id', readShopById);
+    router.patch('/:id', shopUpdateRequest, updateSingleShop);
 
     return router;
 })();
