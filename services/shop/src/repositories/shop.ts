@@ -42,3 +42,7 @@ export const updateShop = async (shopId: string, payload: object) => {
     let data = { ...payload, lastUpdatedAt: new Date() };
     return await Shop.findByIdAndUpdate(shopId, data, { new: true });
 }
+
+export const deleteShop = async (shopId: string) => {
+    return await Shop.findByIdAndDelete(shopId);
+};

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createShop, fetchShops, fetchShopById, updateShop } from '../repositories/shop';
+import { createShop, fetchShops, fetchShopById, updateShop, deleteShop } from '../repositories/shop';
 import { validator } from '../middlewares/validators';
 import { ShopResponse } from '../models/schemas/responses/shop';
 
@@ -80,4 +80,18 @@ export const updateSingleShop = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({ message: 'Shop updated', data: updatedShop });
+};
+
+export const deleteSingleShop = async (req: Request, res: Response) => {
+    const shopId = req.params.id;
+    if (!shopId) {
+        return res.status(400).json({ message: 'Shop id is required' });
+    }
+
+    const deletedShop = await deleteShop(shopId);
+    if (!deletedShop) {
+        return res.status(404).json({ message: 'Shop not found' });
+    }
+
+    res.status(204).send();
 };
