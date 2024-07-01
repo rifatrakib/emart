@@ -37,3 +37,8 @@ export const ShopUpdateRequest = Joi.object({
     additionalInformation: Joi.object().optional(),
     metadata: Joi.object().optional(),
 });
+
+export const BulkShopsTransferRequest = Joi.array().items(Joi.object({
+    shopId: Joi.string().required(),
+    ownerId: Joi.number().required(),
+}));

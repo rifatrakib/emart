@@ -46,3 +46,23 @@ export const updateShop = async (shopId: string, payload: object) => {
 export const deleteShop = async (shopId: string) => {
     return await Shop.findByIdAndDelete(shopId);
 };
+
+export const transferShop = async (shopId: string, ownerAccountId: number, newOwnerAccountId: number) => {
+    console.log({ _id: shopId, ownerAccountId });
+    return await Shop.findOneAndUpdate({ _id: shopId, ownerAccountId }, { ownerAccountId: newOwnerAccountId }, { new: true })
+};
+
+export const transferMultipleShops = async (ownerAccountId: number, payload: Array<{ shopId: string, ownerId: number }>) => {
+    const ops = payload.map(shop => ({
+        updateOne: {
+            filter: { _id: shop.shopId, ownerAccountId: ownerAccountId },
+            update: { $set: { ownerAccountId: shop.ownerId } },
+        }
+    }));
+    const result = await Shop.bulkWrite(ops);
+    return result.modifiedCount;
+};
+
+export const transferAllShops = async (ownerAccountId: number, newOwnerAccountId: number) => {
+    return (await Shop.updateMany({ ownerAccountId }, { ownerAccountId: newOwnerAccountId })).modifiedCount;
+};

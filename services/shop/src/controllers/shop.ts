@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createShop, fetchShops, fetchShopById, updateShop, deleteShop } from '../repositories/shop';
+import { createShop, fetchShops, fetchShopById, updateShop, deleteShop, transferShop, transferAllShops, transferMultipleShops } from '../repositories/shop';
 import { validator } from '../middlewares/validators';
 import { ShopResponse } from '../models/schemas/responses/shop';
 
@@ -94,4 +94,63 @@ export const deleteSingleShop = async (req: Request, res: Response) => {
     }
 
     res.status(204).send();
+};
+
+export const transferSingleShop = async (req: Request, res: Response) => {
+    const shopId = req.params.id;
+    const ownerAccountId = parseInt(req.query.ownerAccountId as string);
+    if (!ownerAccountId) {
+        return res.status(400).json({ message: 'Shop owner account id is required' });
+    }
+
+    const newOwnerAccountId = parseInt(req.query.newOwnerAccountId as string);
+    if (!newOwnerAccountId) {
+        return res.status(400).json({ message: 'New owner account id is required' });
+    }
+
+    const updatedShop = await transferShop(shopId, ownerAccountId, newOwnerAccountId);
+    if (!updatedShop) {
+        return res.status(404).json({ message: 'Shop not found' });
+    }
+
+    updatedShop.id = updatedShop._id?.toString();
+    const result = await validator(ShopResponse, updatedShop);
+    if (!result.isValid) {
+        return res.status(422).json({ details: result.error?.details });
+    }
+
+    res.status(200).json({ message: 'Shop transferred', data: updatedShop });
+};
+
+export const bulkTransferShops = async (req: Request, res: Response) => {
+    const ownerAccountId = parseInt(req.query.ownerAccountId as string);
+    if (!ownerAccountId) {
+        return res.status(400).json({ message: 'Shop owner account id is required' });
+    }
+
+    const updatedShopsCount = await transferMultipleShops(ownerAccountId, req.body);
+    if (!updatedShopsCount) {
+        return res.status(404).json({ message: 'Shops not found' });
+    }
+
+    res.status(200).json({ message: `${updatedShopsCount} shop(s) transferred` });
+};
+
+export const transferAllOwnerShops = async (req: Request, res: Response) => {
+    const ownerAccountId = parseInt(req.query.ownerAccountId as string);
+    if (!ownerAccountId) {
+        return res.status(400).json({ message: 'Shop owner account id is required' });
+    }
+
+    const newOwnerAccountId = parseInt(req.query.newOwnerAccountId as string);
+    if (!newOwnerAccountId) {
+        return res.status(400).json({ message: 'New owner account id is required' });
+    }
+
+    const updatedShopsCount = await transferAllShops(ownerAccountId, newOwnerAccountId);
+    if (!updatedShopsCount) {
+        return res.status(404).json({ message: 'Shops not found' });
+    }
+
+    res.status(200).json({ message: `${updatedShopsCount} shop(s) transferred` });
 };
