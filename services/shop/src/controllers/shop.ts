@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { createShop, fetchShops, fetchShopById, updateShop, deleteShop, transferShop, transferAllShops, transferMultipleShops } from '../repositories/shop';
-import { validator } from '../middlewares/validators';
-import { ShopResponse } from '../models/schemas/responses/shop';
+import { createShop, fetchShops, fetchShopById, updateShop, deleteShop, transferShop, transferAllShops, transferMultipleShops, updateInheritors } from '../repositories/shop';
 
 export const createNewShop = async (req: Request, res: Response) => {
     const ownerAccountId = (req.query.id as string) ? parseInt(req.query.id as string) : null;
@@ -10,12 +8,6 @@ export const createNewShop = async (req: Request, res: Response) => {
     }
 
     const newShop = await createShop(ownerAccountId, req.body);
-    newShop.id = newShop._id?.toString();
-    const result = await validator(ShopResponse, newShop);
-    if (!result.isValid) {
-        return res.status(422).json({ details: result.error?.details });
-    }
-
     res.status(201).json({ message: 'Shop created', data: newShop });
 };
 
@@ -31,13 +23,6 @@ export const readShops = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Shops not found' });
     }
 
-    shops.forEach(async shop => {
-        const result = await validator(ShopResponse, shop);
-        if (!result.isValid) {
-            return res.status(422).json({ details: result.error?.details });
-        }
-    });
-
     res.status(200).json({ message: 'Shops found', data: shops });
 };
 
@@ -52,12 +37,6 @@ export const readShopById = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Shop not found' });
     }
 
-    shop.id = shop._id?.toString();
-    const result = await validator(ShopResponse, shop);
-    if (!result.isValid) {
-        return res.status(422).json({ details: result.error?.details });
-    }
-
     res.status(200).json({ message: 'Shop found', data: shop });
 };
 
@@ -67,16 +46,9 @@ export const updateSingleShop = async (req: Request, res: Response) => {
         return res.status(400).json({ message: 'Shop id is required' });
     }
 
-    console.log(req.body);
     const updatedShop = await updateShop(shopId, req.body);
     if (!updatedShop) {
         return res.status(404).json({ message: 'Shop not found' });
-    }
-
-    updatedShop.id = updatedShop._id?.toString();
-    const result = await validator(ShopResponse, updatedShop);
-    if (!result.isValid) {
-        return res.status(422).json({ details: result.error?.details });
     }
 
     res.status(200).json({ message: 'Shop updated', data: updatedShop });
@@ -113,12 +85,6 @@ export const transferSingleShop = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Shop not found' });
     }
 
-    updatedShop.id = updatedShop._id?.toString();
-    const result = await validator(ShopResponse, updatedShop);
-    if (!result.isValid) {
-        return res.status(422).json({ details: result.error?.details });
-    }
-
     res.status(200).json({ message: 'Shop transferred', data: updatedShop });
 };
 
@@ -153,4 +119,18 @@ export const transferAllOwnerShops = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({ message: `${updatedShopsCount} shop(s) transferred` });
+};
+
+export const renewInheritors = async (req: Request, res: Response) => {
+    const ownerAccountId = parseInt(req.query.ownerAccountId as string);
+    if (!ownerAccountId) {
+        return res.status(400).json({ message: 'Shop owner account id is required' });
+    }
+
+    const updatedShopsCount = await updateInheritors(ownerAccountId, req.body);
+    if (!updatedShopsCount) {
+        return res.status(404).json({ message: 'Shop not found' });
+    }
+
+    res.status(200).json({ message: `${updatedShopsCount} shop(s) updated`});
 };

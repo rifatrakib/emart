@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import { appConfig } from '../config/parse';
-import { validator } from '../middlewares/validators';
+import { validator } from '../utils/validators';
 import { healthSchema } from '../models/schemas/responses/health';
 
 export const healthController = async (req: Request, res: Response) => {

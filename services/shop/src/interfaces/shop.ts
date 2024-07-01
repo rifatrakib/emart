@@ -1,6 +1,6 @@
 import { Document } from 'mongoose';
 
-interface IAddress {
+export interface IAddress {
     street: string;
     city: string;
     state?: string;
@@ -8,9 +8,10 @@ interface IAddress {
     postalCode?: string;
 }
 
-interface IInheritor {
+export interface IInheritor {
     accountId: number;
     share: number;
+    explanation?: string;
 }
 
 export interface IShop extends Document {

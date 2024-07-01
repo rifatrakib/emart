@@ -41,14 +41,13 @@ export const fetchShopById = async (shopId: string) => {
 export const updateShop = async (shopId: string, payload: object) => {
     let data = { ...payload, lastUpdatedAt: new Date() };
     return await Shop.findByIdAndUpdate(shopId, data, { new: true });
-}
+};
 
 export const deleteShop = async (shopId: string) => {
     return await Shop.findByIdAndDelete(shopId);
 };
 
 export const transferShop = async (shopId: string, ownerAccountId: number, newOwnerAccountId: number) => {
-    console.log({ _id: shopId, ownerAccountId });
     return await Shop.findOneAndUpdate({ _id: shopId, ownerAccountId }, { ownerAccountId: newOwnerAccountId }, { new: true })
 };
 
@@ -65,4 +64,15 @@ export const transferMultipleShops = async (ownerAccountId: number, payload: Arr
 
 export const transferAllShops = async (ownerAccountId: number, newOwnerAccountId: number) => {
     return (await Shop.updateMany({ ownerAccountId }, { ownerAccountId: newOwnerAccountId })).modifiedCount;
+};
+
+export const updateInheritors = async (ownerAccountId: number, payload: Array<{ shopId: string, inheritors: Array<{ accountId: number, share: number }> }>) => {
+    const ops = payload.map(shop => ({
+        updateOne: {
+            filter: { ownerAccountId, _id: shop.shopId },
+            update: { $set: { inheritors: shop.inheritors } },
+        }
+    }));
+    const result = await Shop.bulkWrite(ops);
+    return result.modifiedCount;
 };
