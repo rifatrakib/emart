@@ -12,6 +12,10 @@ export const ShopCreateRequest = Joi.object({
     }).required(),
     logo: Joi.string().required(),
     description: Joi.string(),
+    inheritors: Joi.array().items(Joi.object({
+        accountId: Joi.number().required(),
+        share: Joi.number().required(),
+    })).required(),
     accountNumber: Joi.string().required(),
     phoneNumber: Joi.string().required(),
     email: Joi.string().email().required(),
@@ -31,6 +35,10 @@ export const ShopUpdateRequest = Joi.object({
     }).optional(),
     logo: Joi.string().optional(),
     description: Joi.string().optional(),
+    inheritors: Joi.array().items(Joi.object({
+        accountId: Joi.number().required(),
+        share: Joi.number().required(),
+    })).required(),
     accountNumber: Joi.string().optional(),
     phoneNumber: Joi.string().optional(),
     email: Joi.string().email().optional(),

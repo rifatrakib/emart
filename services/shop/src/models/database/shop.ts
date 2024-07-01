@@ -11,6 +11,7 @@ const shopSchema = new Schema<IShop>({
     logo: { type: String, required: true },
     description: { type: String },
     ownerAccountId: { type: Number, required: true },
+    inheritors: { type: [Object], required: true },
     accountNumber: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     email: { type: String, required: true },
