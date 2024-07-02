@@ -1,13 +1,13 @@
 import { appConfig } from '../config/parse';
 import { Shop } from '../models/database/shop';
 
-export const createShop = async (ownerAccountId: number, payload: object) => {
-    const newShop = new Shop({ ...payload, ownerAccountId });
+export const createShop = async (payload: object) => {
+    const newShop = new Shop(payload);
     await newShop.save();
     return newShop;
 };
 
-export const fetchShops = async (term: string | null, country: string | null, city: string | null, ownerAccountId: number | null, page: number) => {
+export const fetchShops = async (term: string | null, country: string | null, city: string | null, id: number | null, page: number) => {
     let query = {};
     let sortQuery = {};
 
@@ -24,8 +24,8 @@ export const fetchShops = async (term: string | null, country: string | null, ci
     if (city) {
         query = { ...query, 'address.city': city };
     }
-    if (ownerAccountId) {
-        query = { ...query, ownerAccountId };
+    if (id) {
+        query = { ...query, 'owners.accountId': id };
     }
 
     return await Shop.find(query)
@@ -66,12 +66,12 @@ export const transferAllShops = async (ownerAccountId: number, newOwnerAccountId
     return (await Shop.updateMany({ ownerAccountId }, { ownerAccountId: newOwnerAccountId })).modifiedCount;
 };
 
-export const updateInheritors = async (ownerAccountId: number, payload: Array<{ shopId: string, inheritors: Array<{ accountId: number, share: number }> }>) => {
-    const ops = payload.map(shop => ({
+export const updateInheritors = async (ownerAccountId: number, payload: Array<{ shopId: string, heirs: Array<{ accountId: number, share: number }> }>) => {
+    const ops = payload.map(record => ({
         updateOne: {
-            filter: { ownerAccountId, _id: shop.shopId },
-            update: { $set: { inheritors: shop.inheritors } },
-        }
+            filter: { 'owners.accountId': ownerAccountId, _id: record.shopId },
+            update: { $set: { 'owners.$.heirs': record.heirs } },
+        },
     }));
     const result = await Shop.bulkWrite(ops);
     return result.modifiedCount;

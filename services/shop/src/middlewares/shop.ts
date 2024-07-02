@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 import { arrayValidator, validator } from '../utils/validators';
-import { ShopCreateRequest, ShopUpdateRequest, BulkShopsTransferRequest, UpdateInheritorsRequest } from '../models/schemas/requests/shop';
+import { ShopCreateRequest, ShopUpdateRequest, UpdateInheritorsRequest } from '../models/schemas/requests/shop';
 
 export const shopCreateRequest = async (req: Request, res: Response, next: NextFunction) => {
     const result = await validator(ShopCreateRequest, req.body);
@@ -13,14 +13,6 @@ export const shopCreateRequest = async (req: Request, res: Response, next: NextF
 
 export const shopUpdateRequest = async (req: Request, res: Response, next: NextFunction) => {
     const result = await validator(ShopUpdateRequest, req.body);
-    if (!result.isValid) {
-        return res.status(422).json({ details: result.error?.details });
-    }
-    next();
-};
-
-export const bulkTransferShopsRequest = async (req: Request, res: Response, next: NextFunction) => {
-    const result = await arrayValidator(BulkShopsTransferRequest, req.body);
     if (!result.isValid) {
         return res.status(422).json({ details: result.error?.details });
     }

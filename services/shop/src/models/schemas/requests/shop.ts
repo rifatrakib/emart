@@ -10,10 +10,18 @@ const AddressSchema = Joi.object({
     postalCode: Joi.string().max(16),
 });
 
-const InheritorSchema = Joi.object({
+const HeirSchema = Joi.object({
     accountId: Joi.number().required().min(1),
     share: Joi.number().required().min(0).max(1),
     explanation: Joi.string().optional().max(64),
+    relationship: Joi.string().optional().max(64),
+});
+
+const OwnerSchema = Joi.object({
+    accountId: Joi.number().required().min(1),
+    share: Joi.number().required().min(0).max(1),
+    explanation: Joi.string().optional().max(64),
+    heirs: Joi.array().items(HeirSchema).custom(validateTotalShares),
 });
 
 export const ShopCreateRequest = Joi.object({
@@ -22,7 +30,7 @@ export const ShopCreateRequest = Joi.object({
     address: AddressSchema.required(),
     logo: Joi.string().required(),
     description: Joi.string().max(1024),
-    inheritors: Joi.array().items(InheritorSchema).required().custom(validateTotalShares),
+    owners: Joi.array().items(OwnerSchema).required().custom(validateTotalShares),
     accountNumber: Joi.string().required().max(64),
     phoneNumber: Joi.string().required().max(16),
     email: Joi.string().email().required().max(256),
@@ -36,7 +44,7 @@ export const ShopUpdateRequest = Joi.object({
     address: AddressSchema.optional(),
     logo: Joi.string().optional(),
     description: Joi.string().optional().max(1024),
-    inheritors: Joi.array().items(InheritorSchema).optional().custom(validateTotalShares),
+    owners: Joi.array().items(OwnerSchema).optional().custom(validateTotalShares),
     accountNumber: Joi.string().optional().max(64),
     phoneNumber: Joi.string().optional().max(16),
     email: Joi.string().email().optional().max(256),
@@ -44,12 +52,7 @@ export const ShopUpdateRequest = Joi.object({
     metadata: Joi.object().optional(),
 });
 
-export const BulkShopsTransferRequest = Joi.array().items(Joi.object({
-    shopId: Joi.string().required().min(24).max(24),
-    ownerId: Joi.number().required().min(1),
-}));
-
 export const UpdateInheritorsRequest = Joi.array().items(Joi.object({
     shopId: Joi.string().required().min(24).max(24),
-    inheritors: Joi.array().items(InheritorSchema).required().custom(validateTotalShares),
+    heirs: Joi.array().items(HeirSchema).required().custom(validateTotalShares),
 }));

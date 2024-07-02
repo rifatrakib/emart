@@ -2,12 +2,7 @@ import { Request, Response } from 'express';
 import { createShop, fetchShops, fetchShopById, updateShop, deleteShop, transferShop, transferAllShops, transferMultipleShops, updateInheritors } from '../repositories/shop';
 
 export const createNewShop = async (req: Request, res: Response) => {
-    const ownerAccountId = (req.query.id as string) ? parseInt(req.query.id as string) : null;
-    if (!ownerAccountId) {
-        return res.status(400).json({ message: 'Owner account id is required' });
-    }
-
-    const newShop = await createShop(ownerAccountId, req.body);
+    const newShop = await createShop(req.body);
     res.status(201).json({ message: 'Shop created', data: newShop });
 };
 
@@ -15,10 +10,12 @@ export const readShops = async (req: Request, res: Response) => {
     const term = req.query.q ? req.query.q as string : null;
     const city = req.query.city ? req.query.city as string: null;
     const country = req.query.country ? req.query.country as string: null;
-    const ownerAccountId = req.query.id ? parseInt(req.query.id as string) : null;
+    const id = req.query.id ? parseInt(req.query.id as string) : null;
     const pageNumber = req.query.page ? parseInt(req.query.page as string) : 1;
+    const demo = req.query.demo ? req.query.demo as string[] : null;
+    console.log(demo);
 
-    const shops = await fetchShops(term, country, city, ownerAccountId, pageNumber);
+    const shops = await fetchShops(term, country, city, id, pageNumber);
     if (!shops.length) {
         return res.status(404).json({ message: 'Shops not found' });
     }
@@ -68,60 +65,7 @@ export const deleteSingleShop = async (req: Request, res: Response) => {
     res.status(204).send();
 };
 
-export const transferSingleShop = async (req: Request, res: Response) => {
-    const shopId = req.params.id;
-    const ownerAccountId = parseInt(req.query.ownerAccountId as string);
-    if (!ownerAccountId) {
-        return res.status(400).json({ message: 'Shop owner account id is required' });
-    }
-
-    const newOwnerAccountId = parseInt(req.query.newOwnerAccountId as string);
-    if (!newOwnerAccountId) {
-        return res.status(400).json({ message: 'New owner account id is required' });
-    }
-
-    const updatedShop = await transferShop(shopId, ownerAccountId, newOwnerAccountId);
-    if (!updatedShop) {
-        return res.status(404).json({ message: 'Shop not found' });
-    }
-
-    res.status(200).json({ message: 'Shop transferred', data: updatedShop });
-};
-
-export const bulkTransferShops = async (req: Request, res: Response) => {
-    const ownerAccountId = parseInt(req.query.ownerAccountId as string);
-    if (!ownerAccountId) {
-        return res.status(400).json({ message: 'Shop owner account id is required' });
-    }
-
-    const updatedShopsCount = await transferMultipleShops(ownerAccountId, req.body);
-    if (!updatedShopsCount) {
-        return res.status(404).json({ message: 'Shops not found' });
-    }
-
-    res.status(200).json({ message: `${updatedShopsCount} shop(s) transferred` });
-};
-
-export const transferAllOwnerShops = async (req: Request, res: Response) => {
-    const ownerAccountId = parseInt(req.query.ownerAccountId as string);
-    if (!ownerAccountId) {
-        return res.status(400).json({ message: 'Shop owner account id is required' });
-    }
-
-    const newOwnerAccountId = parseInt(req.query.newOwnerAccountId as string);
-    if (!newOwnerAccountId) {
-        return res.status(400).json({ message: 'New owner account id is required' });
-    }
-
-    const updatedShopsCount = await transferAllShops(ownerAccountId, newOwnerAccountId);
-    if (!updatedShopsCount) {
-        return res.status(404).json({ message: 'Shops not found' });
-    }
-
-    res.status(200).json({ message: `${updatedShopsCount} shop(s) transferred` });
-};
-
-export const renewInheritors = async (req: Request, res: Response) => {
+export const updateInheritance = async (req: Request, res: Response) => {
     const ownerAccountId = parseInt(req.query.ownerAccountId as string);
     if (!ownerAccountId) {
         return res.status(400).json({ message: 'Shop owner account id is required' });

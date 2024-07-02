@@ -1,7 +1,7 @@
 import { Model, Schema } from 'mongoose';
 
 import { mongoUri } from '../../config/parse';
-import { IAddress, IInheritor, IShop } from '../../interfaces/shop';
+import { IAddress, IHeir, IOwner, IShop } from '../../interfaces/shop';
 import { getDbConnection } from '../../config/db';
 
 const addressSchema = new Schema<IAddress>({
@@ -12,10 +12,18 @@ const addressSchema = new Schema<IAddress>({
     postalCode: { type: String, maxlength: 16 },
 }, { _id: false });
 
-const inheritorSchema = new Schema<IInheritor>({
+const heirSchema = new Schema<IHeir>({
     accountId: { type: Number, required: true, min: 1 },
     share: { type: Number, required: true, min: 0, max: 1 },
     explanation: { type: String, maxLength: 64 },
+    relationship: { type: String, maxLength: 64 },
+}, { _id: false });
+
+const ownerSchema = new Schema<IOwner>({
+    accountId: { type: Number, required: true, min: 1 },
+    share: { type: Number, required: true, min: 0, max: 1 },
+    explanation: { type: String, maxLength: 64 },
+    heirs: { type: [heirSchema] },
 }, { _id: false });
 
 const shopSchema = new Schema<IShop>({
@@ -24,8 +32,7 @@ const shopSchema = new Schema<IShop>({
     address: { type: addressSchema, required: true },
     logo: { type: String, required: true },
     description: { type: String, maxlength: 1024 },
-    ownerAccountId: { type: Number, required: true, index: true, min: 1 },
-    inheritors: { type: [inheritorSchema], required: true },
+    owners: { type: [ownerSchema], required: true },
     accountNumber: { type: String, required: true, maxlength: 64 },
     phoneNumber: { type: String, required: true, maxlength: 16 },
     email: { type: String, required: true, maxlength: 256 },

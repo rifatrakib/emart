@@ -8,10 +8,18 @@ export interface IAddress {
     postalCode?: string;
 }
 
-export interface IInheritor {
+export interface IHeir {
     accountId: number;
     share: number;
     explanation?: string;
+    relationship?: string;
+}
+
+export interface IOwner {
+    accountId: number;
+    share: number;
+    explanation?: string;
+    heirs?: IHeir[];
 }
 
 export interface IShop extends Document {
@@ -20,8 +28,7 @@ export interface IShop extends Document {
     address: IAddress;
     logo: string;
     description?: string;
-    ownerAccountId: number;
-    inheritors: IInheritor[];
+    owners: IOwner[];
     accountNumber: string;
     phoneNumber: string;
     email: string;
